@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M ✦ ✦ M | Modelabel</title>
+    <meta
+      name="description"
+      content="M ✦ ✦ M – Vintage Golden Goose Sneaker, handgefertigt und 1/1 Unikat."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body id="top">
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <div class="menu-group">
+          <button class="menu-toggle" type="button" aria-label="Menü öffnen" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <nav class="hamburger-menu" id="hamburgerMenu" aria-label="Mobilmenü">
+            <button type="button" class="nav-action" data-open-cart>Warenkorb</button>
+            <a href="#shop">Produkte</a>
+            <button type="button" class="nav-action" data-open-bestseller>Bestseller</button>
+            <button type="button" class="admin-menu-trigger">Admin</button>
+          </nav>
+        </div>
+
+        <a href="#top" class="brand" aria-label="M Stern Stern M Home">
+          <span class="brand-word">
+            <span class="brand-m">M</span>
+            <span class="brand-star">✦</span>
+            <span class="brand-star">✦</span>
+            <span class="brand-tail">M</span>
+          </span>
+        </a>
+
+        <div class="nav-spacer" aria-hidden="true"></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-inner">
+          <div class="hero-text">
+            <div class="wordmark" aria-label="M Stern Stern M Logo">
+              <span class="m-letter">M</span>
+              <span class="m-star" aria-hidden="true">
+                <svg viewBox="0 0 80 80" role="img" aria-label="Stern">
+                  <path d="M40 6 L49 28 L72 28 L54 42 L61 64 L40 50 L19 64 L26 42 L8 28 L31 28 Z" />
+                </svg>
+              </span>
+              <span class="m-star" aria-hidden="true">
+                <svg viewBox="0 0 80 80" role="img" aria-label="Stern">
+                  <path d="M40 6 L49 28 L72 28 L54 42 L61 64 L40 50 L19 64 L26 42 L8 28 L31 28 Z" />
+                </svg>
+              </span>
+              <span class="m-letter">M</span>
+            </div>
+            <p class="tagline">N x Jizzy</p>
+            <p class="slogan">Live, Laugh, Larp</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="about section" id="about">
+        <div class="container narrow">
+          <p class="eyebrow">Über uns</p>
+          <h2>Vintage Golden Goose, handumgestaltet zu einem 1/1 Unikat.</h2>
+          <p>
+            Bei MOOM kaufen wir Vintage Golden Goose Sneaker auf, gestalten jedes Paar bei uns zu Hause von Hand um und
+            machen jeden Schuh zu einem individuellen Statement. Jedes Modell ist einzigartig und wird mit dem Namen des
+            Käufers personalisiert.
+          </p>
+        </div>
+      </section>
+
+      <section class="featured section">
+        <div class="container">
+          <div class="section-header">
+            <p class="eyebrow">Top 3</p>
+            <h2>Unsere beliebtesten MOOMs</h2>
+          </div>
+          <div id="topProducts" class="featured-grid" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="shop section" id="shop">
+        <div class="container">
+          <div class="section-header">
+            <p class="eyebrow">Shop</p>
+            <h2>Handgefertigte Unikate</h2>
+          </div>
+          <div id="productGrid" class="product-grid" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="contact section" id="contact">
+        <div class="container form-wrap">
+          <div class="contact-copy">
+            <p class="eyebrow">Bestellung</p>
+            <h2>Ein Paar, das nur dir gehört.</h2>
+            <p>
+              Über das Formular kannst du deine Idee, deinen gewünschten Namen und deine Anfrage direkt senden. Wir
+              melden uns dann zurück.
+            </p>
+          </div>
+
+          <form id="orderForm" class="order-form">
+            <label>
+              Name
+              <input type="text" name="name" placeholder="Dein Name" required />
+            </label>
+
+            <label>
+              E-Mail
+              <input type="email" name="email" placeholder="deine@email.ch" required />
+            </label>
+
+            <label>
+              Gewünschter Name auf dem Schuh
+              <input type="text" name="customName" placeholder="z. B. Nils" required />
+            </label>
+
+            <label>
+              Nachricht
+              <textarea name="message" rows="5" placeholder="Erzähl uns von deinem Wunsch..." required></textarea>
+            </label>
+
+            <button type="submit" class="button primary">Anfrage senden</button>
+            <p id="formMessage" class="form-message" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a>
+        <span>© M ✦ ✦ M</span>
+      </div>
+    </footer>
+
+    <div class="admin-modal hidden" id="adminModal" aria-hidden="true">
+      <div class="admin-modal-card">
+        <button type="button" class="modal-close" aria-label="Admin-Fenster schließen">×</button>
+        <p class="eyebrow">Admin</p>
+        <h3>Code eingeben</h3>
+        <form id="adminLoginForm" class="admin-login-form">
+          <input type="password" id="adminCode" name="code" placeholder="Code" required />
+          <button type="submit" class="button primary">Einloggen</button>
+          <p id="adminLoginMessage" class="admin-login-message" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+
+    <div class="cart-modal hidden" id="cartModal" aria-hidden="true">
+      <div class="cart-modal-card">
+        <button type="button" class="modal-close cart-close" aria-label="Warenkorb schließen">×</button>
+        <p class="eyebrow">Warenkorb</p>
+        <h3>Dein Warenkorb</h3>
+        <div id="cartItems" class="cart-items"></div>
+      </div>
+    </div>
+
+    <div class="bestseller-modal hidden" id="bestsellerModal" aria-hidden="true">
+      <div class="bestseller-card">
+        <button type="button" class="modal-close bestseller-close" aria-label="Bestseller schließen">×</button>
+        <p class="eyebrow">Birthday Edition</p>
+        <h3>Unsere Bestseller</h3>
+        <div id="bestsellerList" class="bestseller-list"></div>
+      </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+  </body>
+</html>

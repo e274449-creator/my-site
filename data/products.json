@@ -1,0 +1,55 @@
+[
+  {
+    "id": "product-1792435395592-l1wytj",
+    "title": "Test Design",
+    "description": "Beschreibung",
+    "price": 499,
+    "size": "39",
+    "condition": "Sehr gut",
+    "model": "Golden Goose Superstar",
+    "materials": "Handarbeit",
+    "status": "Verfügbar",
+    "note": "1/1 Unikat",
+    "featuredImage": "/uploads/1792435395590-moom-test.svg",
+    "images": [
+      "/uploads/1792435395590-moom-test.svg"
+    ],
+    "createdAt": "2026-10-19T18:43:15.592Z"
+  },
+  {
+    "id": "sample-1",
+    "title": "Café Cream",
+    "description": "Ein minimalistisch gestalteter Vintage Golden Goose in cremigem Beige mit einem subtilen, handgemalten Detail. Jede Oberfläche wurde individuell bearbeitet und mit persönlichem Namen versehen.",
+    "price": 420,
+    "size": "38",
+    "condition": "Sehr gut",
+    "model": "Golden Goose Superstar",
+    "materials": "Vintage Leather, Handfarbe, custom finish",
+    "status": "Verfügbar",
+    "note": "1/1 Unikat",
+    "featuredImage": "/uploads/sample-cream.svg",
+    "images": [
+      "/uploads/sample-cream.svg",
+      "/uploads/sample-cream-2.svg"
+    ],
+    "createdAt": "2026-10-19T00:00:00.000Z"
+  },
+  {
+    "id": "sample-2",
+    "title": "Stone Drift",
+    "description": "Ein ruhiger, sandiger Ton mit einer handgefertigten, leicht strukturierten Oberflächenbehandlung. Das Modell steht für ruhige Eleganz im Streetwear-Style.",
+    "price": 450,
+    "size": "39",
+    "condition": "Gut",
+    "model": "Golden Goose Superstar",
+    "materials": "Vintage Leather, handgemalte Details, custom detailing",
+    "status": "Reserviert",
+    "note": "1/1 Unikat",
+    "featuredImage": "/uploads/sample-stone.svg",
+    "images": [
+      "/uploads/sample-stone.svg",
+      "/uploads/sample-stone-2.svg"
+    ],
+    "createdAt": "2026-10-19T00:00:00.000Z"
+  }
+]

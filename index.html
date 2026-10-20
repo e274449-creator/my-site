@@ -1,616 +1,123 @@
 <!DOCTYPE html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Rennspiel</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #333;
-            font-family: Arial, sans-serif;
-        }
-        
-        #gameContainer {
-            position: relative;
-            width: 1200px;
-            height: 800px;
-            border: 3px solid #fff;
-            background: #87CEEB;
-            overflow: hidden;
-        }
-        
-        canvas {
-            display: block;
-            background: linear-gradient(180deg, #87CEEB 0%, #90EE90 50%, #87CEEB 100%);
-        }
-        
-        #info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            z-index: 10;
-        }
-    </style>
-</head>
-<body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas" width="1200" height="800"></canvas>
-        <div id="info">
-            <div>W: Vorwärts | S: Rückwärts</div>
-            <div>A: Links | D: Rechts | SPACE: Nitro</div>
-            <div id="speedometer">Geschwindigkeit: 0 km/h</div>
-            <div id="nitroBar">Nitro: <span id="nitroLevel">100</span>%</div>
-            <div id="policeInfo">Polizei startet in: 15s</div>
-            <div id="shieldInfo">Schild: Aus</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meine neue Website</title>
+    <meta
+      name="description"
+      content="Saubere Startseite für eine neue Website."
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <div class="brand">Meine Firma</div>
+        <nav class="nav-links" aria-label="Hauptnavigation">
+          <a href="#home">Start</a>
+          <a href="#about">Über uns</a>
+          <a href="#services">Leistungen</a>
+          <a href="#contact">Kontakt</a>
+        </nav>
+        <a class="button button-primary" href="#contact">Jetzt anfragen</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="home">
+        <div class="container hero-inner">
+          <div class="hero-copy">
+            <p class="eyebrow">Neu gestartet</p>
+            <h1>Deine neue Website beginnt hier.</h1>
+            <p class="lead">
+              Klar, modern und anpassbar – perfekt als Grundlage für deinen nächsten
+              Online-Auftritt.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#services">Mehr erfahren</a>
+              <a class="button button-secondary" href="#contact">Kontakt</a>
+            </div>
+          </div>
+          <div class="hero-card" aria-label="Beispielkarte">
+            <div class="card-header">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="card-body">
+              <h2>Starter-Template</h2>
+              <p>Sauber aufgebaut, leicht erweiterbar und sofort nutzbar.</p>
+              <ul>
+                <li>Responsive Design</li>
+                <li>Moderne Farben</li>
+                <li>Einfach anpassbar</li>
+              </ul>
+            </div>
+          </div>
         </div>
-    </div>
+      </section>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        // Offscreen-Canvas für Straßen-Maske (weiß = Straße)
-        const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = canvas.width;
-        maskCanvas.height = canvas.height;
-        const maskCtx = maskCanvas.getContext('2d');
+      <section class="section" id="about">
+        <div class="container">
+          <div class="section-heading">
+            <p class="eyebrow">Über uns</p>
+            <h2>Eine solide Grundlage für Wachstum.</h2>
+          </div>
+          <div class="grid three-col">
+            <article class="info-box">
+              <h3>Design</h3>
+              <p>Ein minimalistischer Stil mit Platz für deine Inhalte und Branding.</p>
+            </article>
+            <article class="info-box">
+              <h3>Struktur</h3>
+              <p>Klare Abschnitte für Start, Leistungen und Kontakt.</p>
+            </article>
+            <article class="info-box">
+              <h3>Flexibilität</h3>
+              <p>Leicht erweiterbar mit weiteren Seiten, Formularen und Funktionen.</p>
+            </article>
+          </div>
+        </div>
+      </section>
 
-        const roadWidth = 80;
+      <section class="section alt" id="services">
+        <div class="container">
+          <div class="section-heading">
+            <p class="eyebrow">Leistungen</p>
+            <h2>So kannst du weiterbauen.</h2>
+          </div>
+          <div class="grid three-col">
+            <article class="service-card">
+              <span>01</span>
+              <h3>Landingpage</h3>
+              <p>Perfekt für eine erste starke Präsenz im Internet.</p>
+            </article>
+            <article class="service-card">
+              <span>02</span>
+              <h3>Unterseiten</h3>
+              <p>Einfach zusätzliche Seiten wie Impressum, Angebote oder Blog ergänzen.</p>
+            </article>
+            <article class="service-card">
+              <span>03</span>
+              <h3>Erweiterung</h3>
+              <p>Später können Funktionen, Shop, Booking oder CMS hinzugefügt werden.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
 
-        // Auto-Objekt
-        const car = {
-            x: 600,
-            y: 700,
-            width: 12,
-            height: 18,
-            angle: 0,
-            speed: 0,
-            maxSpeed: 5,
-            acceleration: 0.3,
-            friction: 0.95,
-            turnSpeed: 0.1,
-            nitro: 100,
-            maxNitro: 100,
-            nitroActive: false,
-            nitroPower: 1.5,
-            shieldActive: false,
-            shieldTimer: 0
-        };
+    <footer class="site-footer" id="contact">
+      <div class="container footer-inner">
+        <div>
+          <div class="brand">Meine Firma</div>
+          <p>Deine neue Website startet hier.</p>
+        </div>
+        <a class="button button-primary" href="mailto:hello@example.com">Kontakt aufnehmen</a>
+      </div>
+    </footer>
 
-        // Polizeiautos (Verfolger)
-        const policeCars = [
-            { x: 600, y: 600, width: 10, height: 14, angle: -Math.PI/2, speed: 0, maxSpeed: 4, acceleration: 0.15, turnSpeed: 0.07, color: '#1E88E5' },
-            { x: 900, y: 150, width: 10, height: 14, angle: -Math.PI/2, speed: 0, maxSpeed: 4, acceleration: 0.15, turnSpeed: 0.07, color: '#0D47A1' }
-        ];
-
-        let caught = false;
-        let caughtTimer = 0;
-        let policeActive = false;
-        let policeDelay = 900; // ca. 15 Sekunden Startzeit
-        let policeSpawnTimer = 900; // alle 15 Sekunden neue Verstärkung
-        const policeSpawnInterval = 900;
-
-        // Eingaben
-        const keys = {};
-        window.addEventListener('keydown', (e) => keys[e.key] = true);
-        window.addEventListener('keyup', (e) => keys[e.key] = false);
-
-        // Rennstrecke (Wegpunkte) - Rechteck mit Abzweigungen
-        const trackPoints = [
-            // Hauptstraße unten
-            {x: 600, y: 750},
-            {x: 600, y: 600},
-            {x: 600, y: 450},
-            {x: 600, y: 300},
-            {x: 600, y: 150},
-            
-            // Kurve oben rechts
-            {x: 750, y: 100},
-            {x: 900, y: 100},
-            
-            // Abzweigung nach rechts (oben)
-            {x: 1050, y: 100},
-            {x: 1050, y: 250},
-            {x: 900, y: 250},
-            
-            // Zurück zur Hauptstraße
-            {x: 900, y: 100},
-            {x: 750, y: 100},
-            
-            // Rechte Seite hinunter
-            {x: 900, y: 150},
-            {x: 900, y: 300},
-            {x: 900, y: 450},
-            {x: 900, y: 600},
-            
-            // Abzweigung nach rechts (unten)
-            {x: 1050, y: 600},
-            {x: 1050, y: 750},
-            {x: 900, y: 750},
-            
-            // Zurück nach unten
-            {x: 900, y: 600},
-            {x: 900, y: 750},
-            
-            // Unten rechts Kurve
-            {x: 750, y: 750},
-            
-            // Linke Seite unten
-            {x: 450, y: 750},
-            {x: 450, y: 600},
-            
-            // Abzweigung nach links
-            {x: 300, y: 600},
-            {x: 300, y: 750},
-            {x: 450, y: 750},
-            
-            // Linke Seite hinauf
-            {x: 450, y: 600},
-            {x: 450, y: 450},
-            {x: 450, y: 300},
-            {x: 450, y: 150},
-            
-            // Abzweigung nach links oben
-            {x: 300, y: 150},
-            {x: 300, y: 50},
-            {x: 450, y: 50},
-            {x: 450, y: 150},
-            
-            // Zurück zur Mitte oben
-            {x: 600, y: 150}
-        ];
-
-        // Gebäude zeichnen
-        function drawBuildings() {
-            // Gebäude links oben
-            ctx.fillStyle = '#D2691E';
-            ctx.fillRect(50, 30, 120, 100);
-            ctx.strokeStyle = '#8B4513';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(50, 30, 120, 100);
-            
-            // Fenster
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 3; j++) {
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(65 + i * 25, 45 + j * 25, 15, 15);
-                }
-            }
-            
-            // Gebäude rechts oben
-            ctx.fillStyle = '#CD5C5C';
-            ctx.fillRect(1000, 50, 150, 80);
-            ctx.strokeStyle = '#8B3A3A';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(1000, 50, 150, 80);
-            
-            for (let i = 0; i < 5; i++) {
-                for (let j = 0; j < 2; j++) {
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(1015 + i * 25, 65 + j * 25, 15, 15);
-                }
-            }
-            
-            // Gebäude links unten
-            ctx.fillStyle = '#4169E1';
-            ctx.fillRect(30, 650, 140, 130);
-            ctx.strokeStyle = '#1E40AF';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(30, 650, 140, 130);
-            
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(50 + i * 28, 665 + j * 25, 16, 16);
-                }
-            }
-            
-            // Gebäude rechts unten
-            ctx.fillStyle = '#DAA520';
-            ctx.fillRect(1000, 650, 150, 130);
-            ctx.strokeStyle = '#B8860B';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(1000, 650, 150, 130);
-            
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(1015 + i * 28, 665 + j * 25, 16, 16);
-                }
-            }
-            
-            // Mittel Gebäude oben
-            ctx.fillStyle = '#6A5ACD';
-            ctx.fillRect(550, 30, 100, 80);
-            ctx.strokeStyle = '#483D8B';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(550, 30, 100, 80);
-            
-            for (let i = 0; i < 3; i++) {
-                for (let j = 0; j < 2; j++) {
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(565 + i * 25, 45 + j * 25, 15, 15);
-                }
-            }
-        }
-
-        // Rennstrecke zeichnen
-        function drawTrack() {
-            // Grasboden außerhalb der Strecke
-            ctx.fillStyle = '#228B22';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // --- Maske zeichnen (weiß = befahrbar)
-            maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-            maskCtx.strokeStyle = '#ffffff';
-            maskCtx.lineWidth = roadWidth;
-            maskCtx.lineCap = 'round';
-            maskCtx.lineJoin = 'round';
-            maskCtx.beginPath();
-            maskCtx.moveTo(trackPoints[0].x, trackPoints[0].y);
-            for (let i = 1; i < trackPoints.length; i++) {
-                maskCtx.lineTo(trackPoints[i].x, trackPoints[i].y);
-            }
-            maskCtx.lineTo(trackPoints[0].x, trackPoints[0].y);
-            maskCtx.stroke();
-
-            // Straße zeichnen (Hauptgrafik)
-            ctx.strokeStyle = '#555';
-            ctx.lineWidth = roadWidth;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.moveTo(trackPoints[0].x, trackPoints[0].y);
-            for (let i = 1; i < trackPoints.length; i++) {
-                ctx.lineTo(trackPoints[i].x, trackPoints[i].y);
-            }
-            ctx.lineTo(trackPoints[0].x, trackPoints[0].y);
-            ctx.stroke();
-
-            // Fahrbahnmarkierung (Mittel)
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([20, 20]);
-            ctx.beginPath();
-            ctx.moveTo(trackPoints[0].x, trackPoints[0].y);
-            for (let i = 1; i < trackPoints.length; i++) {
-                ctx.lineTo(trackPoints[i].x, trackPoints[i].y);
-            }
-            ctx.lineTo(trackPoints[0].x, trackPoints[0].y);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Schutzbänder an den Straßenrändern zeichnen
-            drawRoadBorders();
-        }
-
-        // Schutzbänder entlang der Straßenränder zeichnen
-        function drawRoadBorders() {
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 6;
-            ctx.lineCap = 'round';
-            for (let i = 0; i < trackPoints.length; i++) {
-                const p = trackPoints[i];
-                const q = trackPoints[(i + 1) % trackPoints.length];
-                const dx = q.x - p.x;
-                const dy = q.y - p.y;
-                const len = Math.hypot(dx, dy) || 1;
-                const nx = -dy / len; // normal x
-                const ny = dx / len;  // normal y
-                const offset = roadWidth / 2 + 6; // Abstand von Mittellinie
-
-                // linker Rand
-                ctx.beginPath();
-                ctx.moveTo(p.x + nx * offset, p.y + ny * offset);
-                ctx.lineTo(q.x + nx * offset, q.y + ny * offset);
-                ctx.stroke();
-
-                // rechter Rand
-                ctx.beginPath();
-                ctx.moveTo(p.x - nx * offset, p.y - ny * offset);
-                ctx.lineTo(q.x - nx * offset, q.y - ny * offset);
-                ctx.stroke();
-            }
-        }
-
-        // Auto zeichnen (detaillierter)
-        function drawCar() {
-            ctx.save();
-            ctx.translate(car.x, car.y);
-            ctx.rotate(car.angle);
-
-            // Schutzschild
-            if (car.shieldActive) {
-                ctx.strokeStyle = 'rgba(135,206,250,0.7)';
-                ctx.lineWidth = 6;
-                ctx.beginPath();
-                ctx.ellipse(0, 0, car.width * 1.8, car.height * 1.8, 0, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-
-            // Schatten
-            ctx.fillStyle = 'rgba(0,0,0,0.25)';
-            ctx.beginPath();
-            ctx.ellipse(0, car.height * 0.6, car.width, car.height * 0.6, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Karosserie
-            ctx.fillStyle = '#C62828';
-            ctx.fillRect(-car.width / 2, -car.height / 2, car.width, car.height);
-
-            // Motorhaube (leicht nach vorn zulaufend)
-            ctx.fillStyle = '#E53935';
-            ctx.beginPath();
-            ctx.moveTo(-car.width / 2, -car.height / 2);
-            ctx.lineTo(car.width / 2, -car.height / 2);
-            ctx.lineTo(car.width / 4, -car.height / 2 - car.height * 0.4);
-            ctx.lineTo(-car.width / 4, -car.height / 2 - car.height * 0.4);
-            ctx.closePath();
-            ctx.fill();
-
-            // Fenster
-            ctx.fillStyle = '#87CEEB';
-            ctx.fillRect(-car.width / 4, -car.height / 2 + 2, car.width / 2, car.height * 0.35);
-
-            // Scheinwerfer
-            ctx.fillStyle = '#FFF59D';
-            ctx.fillRect(-car.width / 2 - 1, -car.height / 8, 3, 3);
-            ctx.fillRect(car.width / 2 - 2, -car.height / 8, 3, 3);
-
-            // Spoiler hinten
-            ctx.fillStyle = '#8B0000';
-            ctx.fillRect(-car.width / 2, car.height / 2 - 2, car.width, 3);
-
-            // Räder (kreisförmig)
-            ctx.fillStyle = '#111';
-            const rw = 3;
-            const rh = 6;
-            ctx.beginPath();
-            ctx.ellipse(-car.width / 2 - 2, -car.height / 2 + 2, rw, rh, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(car.width / 2 + 2, -car.height / 2 + 2, rw, rh, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(-car.width / 2 - 2, car.height / 2 - 2, rw, rh, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(car.width / 2 + 2, car.height / 2 - 2, rw, rh, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        // Polizeiautos zeichnen
-        function drawPolice() {
-            policeCars.forEach(pc => {
-                ctx.save();
-                ctx.translate(pc.x, pc.y);
-                ctx.rotate(pc.angle);
-                // Karosserie
-                ctx.fillStyle = pc.color;
-                ctx.fillRect(-pc.width/2, -pc.height/2, pc.width, pc.height);
-                // Dach / Streifen
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(-pc.width/4, -pc.height/2 + 2, pc.width/2, pc.height*0.28);
-                ctx.restore();
-            });
-        }
-
-        // Polizeiautos aktualisieren (einfache Verfolgungs-KI)
-        function updatePolice() {
-            if (!policeActive) return;
-            policeCars.forEach(pc => {
-                const dx = car.x - pc.x;
-                const dy = car.y - pc.y;
-                const desired = Math.atan2(dy, dx);
-                let diff = desired - pc.angle;
-                diff = ((diff + Math.PI) % (Math.PI*2)) - Math.PI;
-                if (diff > 0) pc.angle += Math.min(pc.turnSpeed, diff);
-                else pc.angle += Math.max(-pc.turnSpeed, diff);
-
-                pc.speed = Math.min(pc.speed + pc.acceleration, pc.maxSpeed);
-
-                const nx = pc.x + Math.cos(pc.angle) * pc.speed;
-                const ny = pc.y + Math.sin(pc.angle) * pc.speed;
-
-                // Auf Straße prüfen
-                let onRoad = false;
-                if (nx >= 0 && nx < maskCanvas.width && ny >= 0 && ny < maskCanvas.height) {
-                    const p = maskCtx.getImageData(Math.round(nx), Math.round(ny), 1, 1).data;
-                    onRoad = p[0] > 0;
-                }
-                if (onRoad) {
-                    pc.x = nx; pc.y = ny;
-                } else {
-                    pc.speed *= 0.6;
-                }
-
-                // Fang-Check
-                const dist = Math.hypot(car.x - pc.x, car.y - pc.y);
-                if (dist < 18 && !caught && !car.shieldActive) {
-                    caught = true;
-                    caughtTimer = 120; // ca. 2 Sekunden bei 60fps
-                    car.speed = 0;
-                }
-            });
-        }
-
-        function spawnPolice() {
-            const randomIndex = Math.floor(Math.random() * trackPoints.length);
-            const spawnPoint = trackPoints[randomIndex];
-            const newPolice = {
-                x: spawnPoint.x,
-                y: spawnPoint.y,
-                width: 10,
-                height: 14,
-                angle: -Math.PI/2,
-                speed: 0,
-                maxSpeed: 4,
-                acceleration: 0.15,
-                turnSpeed: 0.07,
-                color: '#1565C0'
-            };
-            policeCars.push(newPolice);
-            car.shieldActive = true;
-            car.shieldTimer = 180; // 3 Sekunden
-        }
-
-        function updatePoliceSpawn() {
-            if (!policeActive) {
-                policeDelay--;
-                if (policeDelay <= 0) {
-                    policeActive = true;
-                    policeSpawnTimer = policeSpawnInterval;
-                }
-                return;
-            }
-            policeSpawnTimer--;
-            if (policeSpawnTimer <= 0) {
-                spawnPolice();
-                policeSpawnTimer = policeSpawnInterval;
-            }
-        }
-
-        // Auto-Steuerung
-        function updateCar() {
-            if (caught) {
-                car.speed *= 0.95;
-                return;
-            }
-            // Lenkung
-            if (keys['a'] || keys['A']) car.angle -= car.turnSpeed;
-            if (keys['d'] || keys['D']) car.angle += car.turnSpeed;
-
-            // Nitro
-            if (keys[' '] && car.nitro > 0) {
-                car.nitroActive = true;
-                car.nitro -= 2;
-            } else {
-                car.nitroActive = false;
-                car.nitro = Math.min(car.nitro + 0.5, car.maxNitro);
-            }
-
-            // Aktuelle maxSpeed mit Nitro
-            let currentMaxSpeed = car.maxSpeed;
-            if (car.nitroActive) {
-                currentMaxSpeed = car.maxSpeed * car.nitroPower;
-            }
-
-            // Beschleunigung
-            if (keys['w'] || keys['W']) {
-                car.speed = Math.min(car.speed + car.acceleration, currentMaxSpeed);
-            } else if (keys['s'] || keys['S']) {
-                car.speed = Math.max(car.speed - car.acceleration, -car.maxSpeed / 2);
-            } else {
-                car.speed *= car.friction;
-            }
-
-            // Kandidaten-Position berechnen (Fahrtrichtung entspricht der Autonase)
-            const newX = car.x + Math.sin(car.angle) * car.speed;
-            const newY = car.y - Math.cos(car.angle) * car.speed;
-
-            // Prüfen, ob die neue Position auf der Straße liegt (Maske)
-            let onRoad = false;
-            if (newX >= 0 && newX < maskCanvas.width && newY >= 0 && newY < maskCanvas.height) {
-                const p = maskCtx.getImageData(Math.round(newX), Math.round(newY), 1, 1).data;
-                onRoad = p[0] > 0; // weißer Pixel
-            }
-
-            if (onRoad) {
-                car.x = newX;
-                car.y = newY;
-            } else {
-                // nicht auf Straße: Geschwindigkeit reduzieren, Position nicht aktualisieren
-                car.speed *= 0.6;
-            }
-
-            if (car.shieldActive) {
-                car.shieldTimer--;
-                if (car.shieldTimer <= 0) {
-                    car.shieldActive = false;
-                }
-            }
-
-            // Grenzen
-            car.x = Math.max(10, Math.min(canvas.width - 10, car.x));
-            car.y = Math.max(10, Math.min(canvas.height - 10, car.y));
-        }
-
-        // Geschwindigkeit anzeigen
-        function updateSpeedometer() {
-            const speed = Math.abs(car.speed * 10);
-            document.getElementById('speedometer').textContent = 
-                `Geschwindigkeit: ${Math.round(speed)} km/h`;
-            document.getElementById('nitroLevel').textContent = Math.round(car.nitro);
-            const policeInfo = document.getElementById('policeInfo');
-            if (!policeActive) {
-                policeInfo.textContent = `Polizei startet in: ${Math.ceil(policeDelay/60)}s`;
-            } else {
-                policeInfo.textContent = `Neue Polizei in: ${Math.ceil(policeSpawnTimer/60)}s`;
-            }
-            const shieldInfo = document.getElementById('shieldInfo');
-            shieldInfo.textContent = car.shieldActive ? `Schild: Aktiv (${Math.ceil(car.shieldTimer/60)}s)` : 'Schild: Aus';
-        }
-
-        // Haupt-Spiel-Loop
-        function gameLoop() {
-            // Hintergrund
-            ctx.fillStyle = '#87CEEB';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Zeichnen
-            drawBuildings();
-            drawTrack();
-            // Polizei-Logik
-            updatePoliceSpawn();
-            updatePolice();
-            updateCar();
-            drawPolice();
-            drawCar();
-            updateSpeedometer();
-
-            // Gefangen-Overlay und Timer
-            if (caught) {
-                if (caughtTimer > 0) {
-                    caughtTimer--;
-                } else {
-                    // Reset nach Gefangen sein
-                    caught = false;
-                    car.x = 600; car.y = 700; car.angle = -Math.PI/2; car.speed = 0; car.nitro = car.maxNitro;
-                    // Polizeiautos zurücksetzen
-                    policeCars[0].x = 600; policeCars[0].y = 600; policeCars[0].speed = 0;
-                    policeCars[1].x = 900; policeCars[1].y = 150; policeCars[1].speed = 0;
-                }
-
-                // Overlay anzeigen
-                ctx.fillStyle = 'rgba(200,0,0,0.3)';
-                ctx.fillRect(0,0,canvas.width,canvas.height);
-                ctx.fillStyle = '#fff';
-                ctx.font = '48px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Gefangen!', canvas.width/2, canvas.height/2);
-            }
-            
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Spiel starten
-        gameLoop();
-    </script>
-</body>
+    <script src="js/app.js"></script>
+  </body>
 </html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M ✦ ✦ M | Admin Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #f5f1eb 0%, #ede4d8 100%);
+      }
+
+      .login-card {
+        width: min(420px, calc(100% - 2rem));
+        background: #fff;
+        border: 1px solid rgba(58, 58, 58, 0.12);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(17, 17, 17, 0.08);
+        padding: 2rem;
+      }
+
+      .login-card h1 {
+        margin: 0 0 0.8rem;
+        font-size: 2.2rem;
+      }
+
+      .login-card p {
+        margin: 0 0 1.2rem;
+        color: #555;
+      }
+
+      .login-form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .login-form input {
+        border: 1px solid rgba(58, 58, 58, 0.12);
+        border-radius: 12px;
+        padding: 0.9rem 1rem;
+      }
+
+      .login-message {
+        min-height: 1.5em;
+        font-size: 0.9rem;
+        color: #3a3a3a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <h1>M ✦ ✦ M Admin</h1>
+      <p>Bitte gib den Zugangscode ein.</p>
+
+      <form id="loginForm" class="login-form">
+        <input type="password" id="code" name="code" placeholder="Zugangscode" required />
+        <button type="submit" class="button primary">Einloggen</button>
+      </form>
+
+      <p id="loginMessage" class="login-message" aria-live="polite"></p>
+    </div>
+
+    <script>
+      const form = document.getElementById('loginForm');
+      const message = document.getElementById('loginMessage');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const code = document.getElementById('code').value;
+
+        try {
+          const response = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          });
+
+          const data = await response.json();
+          message.textContent = data.message || 'Login fehlgeschlagen.';
+
+          if (response.ok) {
+            window.location.href = '/admin';
+          }
+        } catch (error) {
+          message.textContent = 'Login fehlgeschlagen.';
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M ✦ ✦ M | Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .admin-section {
+        display: none;
+      }
+
+      .admin-section.active {
+        display: block;
+      }
+
+      .admin-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .status-banner {
+        font-size: 0.95rem;
+        color: #444;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="sidebar">
+        <h1 class="brand-word" aria-label="M Stern Stern M">
+          <span class="brand-m">M</span><span class="brand-star">✦</span><span class="brand-star">✦</span><span class="brand-tail">M</span>
+        </h1>
+        <nav class="admin-nav">
+          <button type="button" data-section="add-product">Produkt hinzufügen</button>
+          <button type="button" data-section="manage-products">Alle Produkte</button>
+          <button type="button" data-section="orders">Bestellungen / Anfragen</button>
+          <button type="button" id="logoutBtn">Logout</button>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <section id="add-product" class="admin-section active panel">
+          <div class="admin-toolbar">
+            <h2>Produkt hinzufügen</h2>
+            <span class="status-banner">1/1 Unikat</span>
+          </div>
+
+          <form id="productForm" class="admin-form" enctype="multipart/form-data">
+            <div>
+              <label>Mehrere Bilder hochladen</label>
+              <input type="file" id="productImages" name="images" accept="image/*" multiple />
+              <div id="imagePreview" class="upload-preview"></div>
+            </div>
+
+            <div class="admin-grid">
+              <label>
+                Titel / Name des Designs
+                <input type="text" name="title" required />
+              </label>
+
+              <label>
+                Preis (CHF)
+                <input type="number" name="price" min="1" step="0.01" required />
+              </label>
+
+              <label>
+                Schuhgrösse (EU)
+                <input type="text" name="size" required />
+              </label>
+
+              <label>
+                Zustand
+                <select name="condition" required>
+                  <option value="">Wähle...</option>
+                  <option>Sehr gut</option>
+                  <option>Gut</option>
+                  <option>Akzeptabel</option>
+                </select>
+              </label>
+
+              <label>
+                Modell / Original-Marke
+                <input type="text" name="model" value="Golden Goose Superstar" required />
+              </label>
+
+              <label>
+                Status
+                <select name="status" required>
+                  <option value="Verfügbar">Verfügbar</option>
+                  <option value="Reserviert">Reserviert</option>
+                  <option value="Verkauft">Verkauft</option>
+                </select>
+              </label>
+
+              <label>
+                Typ
+                <select name="collection" required>
+                  <option value="Normal">Normal</option>
+                  <option value="Birthday Edition">Birthday Edition</option>
+                  <option value="Golden Goose Duck Tape Edition">Golden Goose Duck Tape Edition</option>
+                </select>
+              </label>
+            </div>
+
+            <label>
+              Beschreibung
+              <textarea name="description" required></textarea>
+            </label>
+
+            <label>
+              Verwendete Materialien / Technik
+              <textarea name="materials" placeholder="z. B. Vintage Leather, Handlack, custom paint"></textarea>
+            </label>
+
+            <button type="submit" class="button primary">Produkt speichern</button>
+            <p id="productMessage" class="form-message" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section id="manage-products" class="admin-section panel">
+          <div class="admin-toolbar">
+            <h2>Alle Produkte</h2>
+          </div>
+
+          <div id="productManager"></div>
+        </section>
+
+        <section id="orders" class="admin-section panel">
+          <div class="admin-toolbar">
+            <h2>Bestellungen / Anfragen</h2>
+          </div>
+          <div id="ordersList"></div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const adminSections = document.querySelectorAll('.admin-section');
+      const navButtons = document.querySelectorAll('[data-section]');
+      const productForm = document.getElementById('productForm');
+      const productMessage = document.getElementById('productMessage');
+      const productManager = document.getElementById('productManager');
+      const ordersList = document.getElementById('ordersList');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const productImagesInput = document.getElementById('productImages');
+      const imagePreview = document.getElementById('imagePreview');
+
+      function switchSection(sectionId) {
+        adminSections.forEach((section) => {
+          section.classList.toggle('active', section.id === sectionId);
+        });
+      }
+
+      navButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          switchSection(button.dataset.section);
+        });
+      });
+
+      async function checkAuth() {
+        const response = await fetch('/api/admin/session');
+        const data = await response.json();
+
+        if (!data.authenticated) {
+          window.location.href = '/admin/login.html';
+        }
+      }
+
+      function renderImagePreview(files) {
+        imagePreview.innerHTML = '';
+        Array.from(files).forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+            item.innerHTML = `
+              <img src="${event.target.result}" alt="Upload" />
+              <div class="meta"><span>${file.name}</span></div>
+            `;
+            imagePreview.appendChild(item);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      productImagesInput.addEventListener('change', (event) => {
+        renderImagePreview(event.target.files);
+      });
+
+      async function loadProductsForAdmin() {
+        const response = await fetch('/api/products');
+        const products = await response.json();
+
+        if (!products.length) {
+          productManager.innerHTML = '<p>Keine Produkte vorhanden.</p>';
+          return;
+        }
+
+        productManager.innerHTML = `
+          <table class="list-table">
+            <thead>
+              <tr>
+                <th>Produkt</th>
+                <th>Status</th>
+                <th>Preis</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${products.map((product) => `
+                <tr>
+                  <td>${product.title}<br><small>${product.collection || 'Normal'}</small></td>
+                  <td>${product.status}</td>
+                  <td>CHF ${Number(product.price).toFixed(2)}</td>
+                  <td>
+                    <button class="small-button secondary" type="button" data-action="toggle-status" data-id="${product.id}">Status</button>
+                    <button class="small-button danger" type="button" data-action="delete" data-id="${product.id}">Löschen</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+        productManager.querySelectorAll('[data-action="toggle-status"]').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const id = button.dataset.id;
+            const response = await fetch(`/api/products/${id}`);
+            const product = await response.json();
+            const nextStatus = product.status === 'Verkauft' ? 'Verfügbar' : 'Verkauft';
+
+            const saveResponse = await fetch(`/api/products/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...product,
+                status: nextStatus
+              })
+            });
+
+            if (saveResponse.ok) {
+              loadProductsForAdmin();
+            }
+          });
+        });
+
+        productManager.querySelectorAll('[data-action="delete"]').forEach((button) => {
+          button.addEventListener('click', async () => {
+            if (!confirm('Produkt wirklich löschen?')) return;
+            const id = button.dataset.id;
+            const response = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+              loadProductsForAdmin();
+            }
+          });
+        });
+      }
+
+      async function loadOrders() {
+        const response = await fetch('/api/orders');
+        const orders = await response.json();
+
+        if (!orders.length) {
+          ordersList.innerHTML = '<p>Keine Bestellungen vorhanden.</p>';
+          return;
+        }
+
+        ordersList.innerHTML = `
+          <table class="list-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>E-Mail</th>
+                <th>Produkt / Aufdruck</th>
+                <th>Status / Nachricht</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orders.map((order) => `
+                <tr>
+                  <td>${order.name}</td>
+                  <td>${order.email}</td>
+                  <td>${order.productTitle || 'Individuelle Anfrage'}${order.productPrice ? `<br>CHF ${Number(order.productPrice).toFixed(2)}` : ''}${order.customText ? `<br><strong>Aufdruck:</strong> ${order.customText}` : ''}</td>
+                  <td>${order.status || 'Anfrage'}${order.message ? `<br>${order.message}` : ''}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      productForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(productForm);
+
+        try {
+          const response = await fetch('/api/products', {
+            method: 'POST',
+            body: formData
+          });
+
+          const data = await response.json();
+          productMessage.textContent = data.message || 'Produkt gespeichert.';
+
+          if (response.ok) {
+            productForm.reset();
+            imagePreview.innerHTML = '';
+            await loadProductsForAdmin();
+          }
+        } catch (error) {
+          productMessage.textContent = 'Fehler beim Speichern.';
+        }
+      });
+
+      logoutBtn.addEventListener('click', async () => {
+        await fetch('/api/admin/logout', { method: 'POST' });
+        window.location.href = '/admin/login.html';
+      });
+
+      checkAuth();
+      loadProductsForAdmin();
+      loadOrders();
+    </script>
+  </body>
+</html>

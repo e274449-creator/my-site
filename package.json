@@ -1,0 +1,22 @@
+{
+  "name": "moom-label",
+  "version": "1.0.0",
+  "description": "MOOM modelabel storefront with admin backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "shop",
+    "express",
+    "admin",
+    "modelabel"
+  ],
+  "author": "MOOM",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1"
+  }
+}
