@@ -82,13 +82,15 @@
           });
 
           const data = await response.json();
-          message.textContent = data.message || 'Login fehlgeschlagen.';
+          message.textContent = response.ok
+            ? (data.message || 'Eingeloggt.')
+            : (data.message || `Login fehlgeschlagen (HTTP ${response.status}).`);
 
           if (response.ok) {
             window.location.href = '/admin';
           }
         } catch (error) {
-          message.textContent = 'Login fehlgeschlagen.';
+          message.textContent = error.message || 'Der Login-Server ist nicht erreichbar. Bitte prüfe den Deploy-Status und versuche es erneut.';
         }
       });
     </script>
