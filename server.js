@@ -13,11 +13,11 @@ const path = require('path');
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'starsfromthemoom';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'moom-session-secret';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const SESSION_SECRET = process.env.SESSION_SECRET;
 
-if (process.env.NODE_ENV === 'production' && (!process.env.ADMIN_PASSWORD || !process.env.SESSION_SECRET)) {
-  throw new Error('In production müssen ADMIN_PASSWORD und SESSION_SECRET gesetzt sein.');
+if (!ADMIN_PASSWORD || !SESSION_SECRET) {
+  throw new Error('ADMIN_PASSWORD und SESSION_SECRET müssen als Umgebungsvariablen gesetzt sein (lokal in .env, auf Netlify in den Site-Environment-Variablen).');
 }
 
 // Verzeichnisse

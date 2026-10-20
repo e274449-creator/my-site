@@ -31,9 +31,11 @@ npm start
 
 ## Admin-Zugangscode
 
-```text
-starsfromthemoom
-```
+Der Admin-Zugang wird über die Umgebungsvariable `ADMIN_PASSWORD` festgelegt. Speichere den Wert lokal in `.env` und auf Netlify unter **Site configuration → Environment variables**. Zugangsdaten gehören nicht in den Quellcode oder ins Git-Repository.
+
+Der Server benötigt zusätzlich `SESSION_SECRET`, einen langen zufälligen Schlüssel zur Signierung der Login-Sitzung. Beide Variablen müssen beim Serverstart vorhanden sein; andernfalls startet der Server absichtlich nicht.
+
+Für die lokale Entwicklung kannst du `.env.example` als Vorlage für eine nicht versionierte `.env` verwenden und darin eigene geheime Werte setzen. Auf Netlify setzt du beide Variablen in den Site-Einstellungen und löst danach einen neuen Deploy aus.
 
 ## Wichtige Hinweise
 
