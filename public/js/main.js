@@ -202,6 +202,9 @@ if (adminLoginForm) {
   adminLoginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const code = document.getElementById('adminCode')?.value || '';
+    const submitButton = adminLoginForm.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    if (adminLoginMessage) adminLoginMessage.textContent = 'Anmeldung wird geprüft …';
 
     try {
       const response = await fetch('/api/admin/login', {
@@ -210,14 +213,31 @@ if (adminLoginForm) {
         body: JSON.stringify({ code })
       });
 
-      const data = await response.json();
-      if (adminLoginMessage) adminLoginMessage.textContent = data.message || 'Login fehlgeschlagen.';
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        const message = responseText.trimStart().startsWith('<')
+          ? `Netlify hat keine API-Antwort geliefert (HTTP ${response.status}). Bitte prüfe das letzte Deployment der Netlify Function.`
+          : `Die Login-Antwort ist ungültig (HTTP ${response.status}).`;
+        if (adminLoginMessage) adminLoginMessage.textContent = message;
+        return;
+      }
+
+      if (adminLoginMessage) {
+        adminLoginMessage.textContent = data.message || (response.ok
+          ? 'Eingeloggt.'
+          : `Login fehlgeschlagen (HTTP ${response.status}).`);
+      }
 
       if (response.ok) {
         window.location.href = '/admin';
       }
     } catch (error) {
-      if (adminLoginMessage) adminLoginMessage.textContent = 'Login fehlgeschlagen.';
+      if (adminLoginMessage) adminLoginMessage.textContent = `Login-Server nicht erreichbar: ${error.message || 'Netzwerkfehler'}`;
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
   });
 }
