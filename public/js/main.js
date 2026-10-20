@@ -228,7 +228,7 @@ if (adminLoginForm) {
       if (adminLoginMessage) {
         adminLoginMessage.textContent = data.message || (response.ok
           ? 'Eingeloggt.'
-          : `Login fehlgeschlagen (HTTP ${response.status}).`);
+          : (data.error || `Login fehlgeschlagen (HTTP ${response.status}).`));
       }
 
       if (response.ok) {
@@ -280,6 +280,30 @@ async function loadProducts() {
     const products = await response.json();
 
     const topThree = products.slice(0, 3);
+
+    if (bestsellerList) {
+      const bestsellers = products.filter((product) => product.isBestseller || product.collection === 'Birthday Edition').slice(0, 3);
+      bestsellerList.innerHTML = bestsellers.length
+        ? bestsellers.map((product) => `
+          <div class="bestseller-item">
+            <img src="${product.featuredImage || product.images?.[0] || '/uploads/sample-cream.svg'}" alt="${product.title}" />
+            <div class="meta"><strong>${product.title}</strong><div>${product.collection || 'Birthday Edition'} · CHF ${Number(product.price).toFixed(2)}</div></div>
+            <button type="button" class="small-button secondary add-best-product" data-id="${product.id}">Hinzufügen</button>
+          </div>
+        `).join('')
+        : '<p class="empty-cart">Noch keine Birthday Edition verfügbar.</p>';
+
+      bestsellerList.querySelectorAll('.add-best-product').forEach((button) => {
+        button.addEventListener('click', () => {
+          const selected = products.find((item) => item.id === button.dataset.id);
+          if (selected) {
+            addToCart(selected);
+            openCart();
+            closeBestsellerModal();
+          }
+        });
+      });
+    }
 
     if (topProducts) {
       topProducts.innerHTML = topThree

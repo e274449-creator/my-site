@@ -98,7 +98,7 @@
 
           message.textContent = data.message || (response.ok
             ? 'Eingeloggt.'
-            : `Login fehlgeschlagen (HTTP ${response.status}).`);
+            : (data.error || `Login fehlgeschlagen (HTTP ${response.status}).`));
 
           if (response.ok) {
             window.location.href = '/admin';

@@ -1,7 +1,5 @@
 import { getMoomStore } from './lib/stores.mjs';
 
-const imagesStore = getMoomStore('moom-images');
-
 export const handler = async (event) => {
   const prefix = '/.netlify/functions/media/';
   const routePath = event.path || '';
@@ -11,6 +9,7 @@ export const handler = async (event) => {
   }
 
   try {
+    const imagesStore = getMoomStore('moom-images');
     const result = await imagesStore.getWithMetadata(key, { type: 'arrayBuffer' });
     if (!result) return { statusCode: 404, body: 'Bild nicht gefunden.' };
     return {

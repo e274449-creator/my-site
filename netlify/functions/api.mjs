@@ -1,9 +1,24 @@
 import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import { getMoomStore } from './lib/stores.mjs';
 
-const productsStore = getMoomStore('moom-products');
-const ordersStore = getMoomStore('moom-orders');
-const imagesStore = getMoomStore('moom-images');
+let productsStore;
+let ordersStore;
+let imagesStore;
+
+function getProductsStore() {
+  productsStore ||= getMoomStore('moom-products');
+  return productsStore;
+}
+
+function getOrdersStore() {
+  ordersStore ||= getMoomStore('moom-orders');
+  return ordersStore;
+}
+
+function getImagesStore() {
+  imagesStore ||= getMoomStore('moom-images');
+  return imagesStore;
+}
 const SESSION_COOKIE = 'moom_admin_session';
 const SESSION_MAX_AGE = 8 * 60 * 60;
 
@@ -117,7 +132,7 @@ async function storeProductImages(images) {
   if (totalBytes > 3 * 1024 * 1024) throw new Error('Die Bilder dürfen zusammen höchstens 3 MB gross sein.');
   return Promise.all(preparedImages.map(async ({ bytes, contentType }) => {
     const key = `${Date.now()}-${randomBytes(6).toString('hex')}`;
-    await imagesStore.set(key, bytes, { metadata: { contentType } });
+    await getImagesStore().set(key, bytes, { metadata: { contentType } });
     return `/.netlify/functions/media/${key}`;
   }));
 }
@@ -148,13 +163,13 @@ export const handler = async (event) => {
     }
 
     if (route === '/products' && method === 'GET') {
-      const products = await readArray(productsStore, 'inventory', seedProducts);
+      const products = await readArray(getProductsStore(), 'inventory', seedProducts);
       return json(200, products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     }
 
     const productMatch = route.match(/^\/products\/([^/]+)$/);
     if (productMatch && method === 'GET') {
-      const products = await readArray(productsStore, 'inventory', seedProducts);
+      const products = await readArray(getProductsStore(), 'inventory', seedProducts);
       const product = products.find((item) => item.id === decodeURIComponent(productMatch[1]));
       return product ? json(200, product) : json(404, { message: 'Produkt nicht gefunden.' });
     }
@@ -180,16 +195,16 @@ export const handler = async (event) => {
         isDuckTapeEdition: collection === 'Golden Goose Duck Tape Edition',
         note: '1/1 Unikat', featuredImage: uploadedImages[0], images: uploadedImages, createdAt: new Date().toISOString()
       };
-      const products = await readArray(productsStore, 'inventory', seedProducts);
+      const products = await readArray(getProductsStore(), 'inventory', seedProducts);
       products.unshift(product);
-      await saveArray(productsStore, 'inventory', products);
+      await saveArray(getProductsStore(), 'inventory', products);
       return json(201, { success: true, product });
     }
 
     if (productMatch && method === 'PUT') {
       const denied = requireAdmin(event);
       if (denied) return denied;
-      const products = await readArray(productsStore, 'inventory', seedProducts);
+      const products = await readArray(getProductsStore(), 'inventory', seedProducts);
       const index = products.findIndex((item) => item.id === decodeURIComponent(productMatch[1]));
       if (index < 0) return json(404, { message: 'Produkt nicht gefunden.' });
       const current = products[index];
@@ -201,17 +216,17 @@ export const handler = async (event) => {
       };
       delete updated.imagesUpload;
       products[index] = updated;
-      await saveArray(productsStore, 'inventory', products);
+      await saveArray(getProductsStore(), 'inventory', products);
       return json(200, { success: true, product: updated });
     }
 
     if (productMatch && method === 'DELETE') {
       const denied = requireAdmin(event);
       if (denied) return denied;
-      const products = await readArray(productsStore, 'inventory', seedProducts);
+      const products = await readArray(getProductsStore(), 'inventory', seedProducts);
       const filtered = products.filter((item) => item.id !== decodeURIComponent(productMatch[1]));
       if (filtered.length === products.length) return json(404, { message: 'Produkt nicht gefunden.' });
-      await saveArray(productsStore, 'inventory', filtered);
+      await saveArray(getProductsStore(), 'inventory', filtered);
       return json(200, { success: true, message: 'Produkt gelöscht.' });
     }
 
@@ -223,7 +238,7 @@ export const handler = async (event) => {
       if (!name || !email || (!productId && (!body.customName || !body.message))) return json(400, { message: 'Bitte alle Pflichtfelder ausfüllen.' });
       let details = {};
       if (productId) {
-        const products = await readArray(productsStore, 'inventory', seedProducts);
+        const products = await readArray(getProductsStore(), 'inventory', seedProducts);
         const product = products.find((item) => item.id === productId);
         if (!product) return json(404, { message: 'Das ausgewählte Produkt wurde nicht gefunden.' });
         if (product.status !== 'Verfügbar') return json(409, { message: 'Dieses Produkt ist leider nicht mehr verfügbar.' });
@@ -231,29 +246,32 @@ export const handler = async (event) => {
         details = { productId, productTitle: product.title, productPrice: Number(product.price), customText, orderType: 'Personalisierte Produktbestellung', paymentStatus: 'Zahlung ausstehend' };
         const index = products.findIndex((item) => item.id === productId);
         products[index] = { ...products[index], status: 'Reserviert' };
-        await saveArray(productsStore, 'inventory', products);
+        await saveArray(getProductsStore(), 'inventory', products);
       }
       const order = {
         id: `order-${Date.now()}-${randomBytes(3).toString('hex')}`, name, email,
         customName: String(body.customName || customText).trim(), message: String(body.message || '').trim(),
         ...details, status: details.paymentStatus || 'Anfrage', createdAt: new Date().toISOString()
       };
-      const orders = await readArray(ordersStore, 'orders', []);
+      const orders = await readArray(getOrdersStore(), 'orders', []);
       orders.unshift(order);
-      await saveArray(ordersStore, 'orders', orders);
+      await saveArray(getOrdersStore(), 'orders', orders);
       return json(201, { success: true, order, message: productId ? 'Deine Bestellung ist eingegangen. Das Unikat wurde für dich reserviert.' : 'Deine Anfrage wurde gesendet.' });
     }
 
     if (route === '/orders' && method === 'GET') {
       const denied = requireAdmin(event);
       if (denied) return denied;
-      const orders = await readArray(ordersStore, 'orders', []);
+      const orders = await readArray(getOrdersStore(), 'orders', []);
       return json(200, orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     }
 
     return json(404, { message: 'API-Endpunkt nicht gefunden.' });
   } catch (error) {
     console.error('Netlify API error:', error);
-    return json(400, { message: error.message || 'Die Anfrage konnte nicht verarbeitet werden.' });
+    if (error.message?.includes('environment has not been configured to use Netlify Blobs')) {
+      return json(503, { message: 'Netlify Blobs ist für diese Site noch nicht verfügbar. Prüfe, ob die Site dem Netlify-Projekt zugeordnet ist und die Function im Live-Deploy läuft.' });
+    }
+    return json(500, { message: 'Ein interner Fehler in der Netlify Function ist aufgetreten.' });
   }
 };
