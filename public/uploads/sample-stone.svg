@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
+  <rect width="1200" height="1500" fill="#D8D3CF"/>
+  <rect x="120" y="180" width="960" height="1080" rx="26" fill="#FAF8F5"/>
+  <path d="M300 470C390 340 470 260 600 260C730 260 810 340 900 470L790 520C740 430 700 390 600 390C500 390 460 430 410 520L300 470Z" fill="#3A3A3A" opacity="0.18"/>
+  <path d="M360 590L480 1120H720L840 590H660L610 840H590L540 590H360Z" fill="#3A3A3A" opacity="0.18"/>
+  <text x="600" y="730" text-anchor="middle" font-size="92" font-family="Arial, Helvetica, sans-serif" font-weight="700" fill="#3A3A3A">STONE</text>
+  <text x="600" y="820" text-anchor="middle" font-size="28" font-family="Arial, Helvetica, sans-serif" letter-spacing="8" fill="#3A3A3A">DRIFT</text>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
+  <rect width="1200" height="1500" fill="#E8DFD0"/>
+  <rect x="110" y="150" width="980" height="1200" rx="34" fill="#F5F1EA"/>
+  <path d="M290 540Q340 300 600 250Q860 300 910 540L790 600Q730 430 600 420Q470 430 410 600Z" fill="#B8A99A"/>
+  <path d="M350 640L470 1160H730L850 640H680L620 900H580L520 640Z" fill="#D0C3B6"/>
+  <text x="600" y="1280" text-anchor="middle" font-size="42" font-family="Arial, sans-serif" letter-spacing="8" fill="#3A3A3A">CAFÉ CREAM</text>
+</svg>

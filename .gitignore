@@ -2,3 +2,8 @@ node_modules/
 .env
 uploads/*
 !uploads/.gitkeep
+!.vscode
+node_modules/.cache/
+.netlify/
+.env.*
+!.env.example

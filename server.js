@@ -366,7 +366,22 @@ app.post('/api/orders', (req, res) => {
   orders.unshift(order);
   writeJson(ORDERS_FILE, orders);
 
-  return res.status(201).json({ success: true, message: 'Deine Anfrage wurde gesendet.' });
+  if (productDetails.productId) {
+    const products = readJson(PRODUCTS_FILE);
+    const productIndex = products.findIndex((item) => item.id === productDetails.productId);
+    if (productIndex !== -1) {
+      products[productIndex] = { ...products[productIndex], status: 'Reserviert' };
+      writeJson(PRODUCTS_FILE, products);
+    }
+  }
+
+  return res.status(201).json({
+    success: true,
+    order,
+    message: productDetails.productId
+      ? 'Deine Bestellung ist eingegangen. Das Unikat wurde für dich reserviert.'
+      : 'Deine Anfrage wurde gesendet.'
+  });
 });
 
 app.get('/api/orders', requireAdmin, (req, res) => {

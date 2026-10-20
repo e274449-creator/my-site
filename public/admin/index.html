@@ -55,7 +55,8 @@
           <form id="productForm" class="admin-form" enctype="multipart/form-data">
             <div>
               <label>Mehrere Bilder hochladen</label>
-              <input type="file" id="productImages" name="images" accept="image/*" multiple />
+              <input type="file" id="productImages" name="images" accept="image/jpeg,image/png,image/webp,image/svg+xml" multiple />
+              <small>Bis zu 3 Bilder, jeweils maximal 1 MB.</small>
               <div id="imagePreview" class="upload-preview"></div>
             </div>
 
@@ -299,11 +300,35 @@
       productForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(productForm);
+        const selectedFiles = Array.from(productImagesInput.files || []);
+
+        if (selectedFiles.length === 0) {
+          productMessage.textContent = 'Bitte mindestens ein Bild hochladen.';
+          return;
+        }
+        if (selectedFiles.length > 3 || selectedFiles.some((file) => file.size > 1024 * 1024) || selectedFiles.reduce((sum, file) => sum + file.size, 0) > 3 * 1024 * 1024) {
+          productMessage.textContent = 'Bitte höchstens 3 Bilder auswählen. Jedes Bild darf max. 1 MB und alle zusammen max. 3 MB gross sein.';
+          return;
+        }
+
+        const submitButton = productForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        productMessage.textContent = 'Produkt wird gespeichert …';
 
         try {
+          const images = await Promise.all(selectedFiles.map((file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve({ name: file.name, data: reader.result });
+            reader.onerror = () => reject(new Error('Ein Bild konnte nicht gelesen werden.'));
+            reader.readAsDataURL(file);
+          })));
+          const payload = Object.fromEntries(formData.entries());
+          payload.images = images;
+
           const response = await fetch('/api/products', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
           });
 
           const data = await response.json();
@@ -315,7 +340,9 @@
             await loadProductsForAdmin();
           }
         } catch (error) {
-          productMessage.textContent = 'Fehler beim Speichern.';
+          productMessage.textContent = error.message || 'Fehler beim Speichern.';
+        } finally {
+          submitButton.disabled = false;
         }
       });
 

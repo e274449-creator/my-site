@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
+  <rect width="1200" height="1500" fill="#E8DFD0"/>
+  <rect x="140" y="180" width="920" height="1060" rx="28" fill="#F7F3EE"/>
+  <path d="M330 420L500 1030L700 420H850L610 1130H390L150 420H330Z" fill="#3A3A3A" opacity="0.15"/>
+  <path d="M300 470C370 300 470 220 600 220C730 220 830 300 900 470L760 520C710 420 670 390 600 390C530 390 490 420 440 520L300 470Z" fill="#3A3A3A" opacity="0.16"/>
+  <rect x="235" y="1050" width="730" height="80" rx="12" fill="#3A3A3A" opacity="0.12"/>
+  <text x="600" y="720" text-anchor="middle" font-size="110" font-family="Arial, Helvetica, sans-serif" font-weight="700" fill="#3A3A3A">MOOM</text>
+  <text x="600" y="820" text-anchor="middle" font-size="34" font-family="Arial, Helvetica, sans-serif" letter-spacing="8" fill="#3A3A3A">1/1 UNIKAT</text>
+</svg>
