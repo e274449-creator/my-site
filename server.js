@@ -2,6 +2,8 @@
 // Hauptserver für das MOOM Modelabel.
 // Das Projekt nutzt Express für die API und statische Seiten, Multer für Uploads und JSON-Dateien als einfache Datenspeicherung.
 
+require('dotenv').config();
+
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
