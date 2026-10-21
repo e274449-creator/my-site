@@ -183,7 +183,7 @@ async function storeProductImages(images) {
   }));
 }
 
-export const handler = async (event) => {
+async function handleApiEvent(event) {
   const method = event.httpMethod;
   const route = getApiPath(event);
   const body = parseBody(event);
@@ -463,4 +463,25 @@ export const handler = async (event) => {
     }
     return json(500, { message: 'Ein interner Fehler in der Netlify Function ist aufgetreten.' });
   }
-};
+}
+
+export default async function handler(request) {
+  const requestBytes = Buffer.from(await request.arrayBuffer());
+  const url = new URL(request.url);
+  const event = {
+    httpMethod: request.method,
+    path: url.pathname,
+    rawUrl: request.url,
+    headers: Object.fromEntries(request.headers.entries()),
+    body: requestBytes.length ? requestBytes.toString('base64') : null,
+    isBase64Encoded: true
+  };
+  const result = await handleApiEvent(event);
+  const responseBody = result.isBase64Encoded
+    ? Buffer.from(result.body || '', 'base64')
+    : (result.body || '');
+  return new Response(responseBody, {
+    status: result.statusCode || 200,
+    headers: result.headers || {}
+  });
+}

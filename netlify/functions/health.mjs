@@ -1,1 +1,3 @@
-export const handler = async () => ({ statusCode: 200, body: 'OK' });
+export default async function handler() {
+	return new Response('OK');
+}
