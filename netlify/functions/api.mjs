@@ -89,7 +89,7 @@ function cookie(value, maxAge) {
 }
 
 async function readArray(store, key, seed = []) {
-  const existing = await store.get(key, { type: 'json' });
+  const existing = await store.get(key, { type: 'json', consistency: 'strong' });
   if (Array.isArray(existing)) return existing;
   await store.setJSON(key, seed);
   return seed;
