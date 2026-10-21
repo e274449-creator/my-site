@@ -73,7 +73,7 @@ async function loadSingleProduct() {
               </label>
               <label>Gewünschter Aufdruck (max. 50 Zeichen)<input type="text" name="customText" maxlength="50" placeholder="z. B. Nils" required /></label>
               <label>Zusätzliche Nachricht (optional)<textarea name="message" rows="3" placeholder="Noch ein Wunsch oder eine Frage?"></textarea></label>
-              <button type="submit" class="button primary">Bestellung anfragen &amp; Unikat reservieren</button>
+              <button type="submit" class="button primary">Unikat reservieren &amp; sicher bezahlen</button>
               <p id="personalizationMessage" class="form-message" aria-live="polite"></p>
             </form>
           </section>
@@ -118,6 +118,7 @@ async function loadSingleProduct() {
         const formData = new FormData(personalizationForm);
         const payload = Object.fromEntries(formData.entries());
         submitButton.disabled = true;
+        message.textContent = 'Deine Reservierung wird vorbereitet …';
 
         try {
           const orderResponse = await fetch('/api/orders', {
@@ -128,20 +129,17 @@ async function loadSingleProduct() {
           const result = await orderResponse.json();
           if (!orderResponse.ok) throw new Error(result.message || 'Die Bestellung konnte nicht gesendet werden.');
 
-          document.getElementById('purchasePanel').innerHTML = `
-            <p class="eyebrow">Bestellung vorgemerkt</p>
-            <h2>Danke, ${payload.name}.</h2>
-            <p>${result.message}</p>
-            <div class="purchase-summary">
-              <strong>${result.order.productTitle}</strong>
-              <span>Aufdruck: ${payload.customText}</span>
-              <span>${productSelect.options[productSelect.selectedIndex].textContent}</span>
-              <span>Status: Zahlung ausstehend</span>
-            </div>
-            <p class="purchase-note">Es wurde noch keine Zahlung ausgelöst. Wir melden uns unter ${payload.email}, um die Bestellung und Zahlung mit dir abzuschliessen.</p>
-            <a href="/#shop" class="button primary">Zurück zum Shop</a>
-          `;
-          document.getElementById('purchasePanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          message.textContent = 'Reservierung erfolgreich. Sichere Zahlungsseite wird geöffnet …';
+          const checkoutResponse = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: result.order.id })
+          });
+          const checkout = await checkoutResponse.json();
+          if (!checkoutResponse.ok || !checkout.url) {
+            throw new Error(checkout.message || 'Die Zahlungsseite konnte nicht gestartet werden. Deine Reservierung bleibt vorübergehend bestehen.');
+          }
+          window.location.assign(checkout.url);
         } catch (error) {
           message.textContent = error.message || 'Fehler beim Senden. Bitte versuche es erneut.';
           submitButton.disabled = false;

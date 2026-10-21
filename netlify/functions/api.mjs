@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import { getMoomStore } from './lib/stores.mjs';
+import Stripe from 'stripe';
 
 let productsStore;
 let ordersStore;
@@ -21,6 +22,10 @@ function getImagesStore() {
 }
 const SESSION_COOKIE = 'moom_admin_session';
 const SESSION_MAX_AGE = 8 * 60 * 60;
+
+function getStripe() {
+  return process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+}
 
 const seedProducts = [
   {
@@ -94,6 +99,42 @@ async function saveArray(store, key, value) {
   await store.setJSON(key, value);
 }
 
+async function releaseExpiredReservations() {
+  const [orders, products] = await Promise.all([
+    readArray(getOrdersStore(), 'orders', []),
+    readArray(getProductsStore(), 'inventory', seedProducts)
+  ]);
+  const now = Date.now();
+  const expiredOrders = orders.filter((order) =>
+    order.orderType === 'Personalisierte Produktbestellung' &&
+    order.paymentStatus !== 'Bezahlt' &&
+    order.checkoutExpiresAt &&
+    Date.parse(order.checkoutExpiresAt) <= now
+  );
+  if (!expiredOrders.length) return;
+
+  const expiredIds = new Set(expiredOrders.map((order) => order.id));
+  const expiredProductIds = new Set(expiredOrders.map((order) => order.productId));
+  const activeProductIds = new Set(orders
+    .filter((order) => !expiredIds.has(order.id) && order.paymentStatus !== 'Bezahlt' && order.checkoutExpiresAt && Date.parse(order.checkoutExpiresAt) > now)
+    .map((order) => order.productId));
+
+  for (let index = 0; index < orders.length; index += 1) {
+    if (expiredIds.has(orders[index].id)) {
+      orders[index] = { ...orders[index], status: 'Abgelaufen', paymentStatus: 'Abgelaufen' };
+    }
+  }
+  for (let index = 0; index < products.length; index += 1) {
+    if (expiredProductIds.has(products[index].id) && !activeProductIds.has(products[index].id) && products[index].status === 'Reserviert') {
+      products[index] = { ...products[index], status: 'Verfügbar' };
+    }
+  }
+  await Promise.all([
+    saveArray(getOrdersStore(), 'orders', orders),
+    saveArray(getProductsStore(), 'inventory', products)
+  ]);
+}
+
 function parseBody(event) {
   if (!event.body) return {};
   const raw = event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('utf8') : event.body;
@@ -102,6 +143,11 @@ function parseBody(event) {
   } catch {
     return {};
   }
+}
+
+function getRawBody(event) {
+  if (!event.body) return Buffer.alloc(0);
+  return Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8');
 }
 
 function getApiPath(event) {
@@ -143,6 +189,132 @@ export const handler = async (event) => {
   const body = parseBody(event);
 
   try {
+    if (route === '/stripe/webhook' && method === 'POST') {
+      const stripe = getStripe();
+      const signature = event.headers?.['stripe-signature'] || event.headers?.['Stripe-Signature'];
+      if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET || !signature) {
+        return json(503, { message: 'Stripe Webhook ist noch nicht eingerichtet.' });
+      }
+
+      let stripeEvent;
+      try {
+        stripeEvent = stripe.webhooks.constructEvent(getRawBody(event), signature, process.env.STRIPE_WEBHOOK_SECRET);
+      } catch (error) {
+        console.warn('Stripe webhook signature verification failed:', error.message);
+        return json(400, { message: 'Ungültige Stripe-Webhook-Signatur.' });
+      }
+
+      if (['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(stripeEvent.type)) {
+        const checkout = stripeEvent.data.object;
+        if (checkout.payment_status === 'paid') {
+          const orderId = checkout.metadata?.moomOrderId;
+          const productId = checkout.metadata?.productId;
+          if (orderId && productId) {
+            const orders = await readArray(getOrdersStore(), 'orders', []);
+            const orderIndex = orders.findIndex((item) => item.id === orderId);
+            if (orderIndex >= 0 && orders[orderIndex].paymentStatus !== 'Bezahlt') {
+              orders[orderIndex] = {
+                ...orders[orderIndex],
+                status: 'Bezahlt',
+                paymentStatus: 'Bezahlt',
+                stripeCheckoutSessionId: checkout.id,
+                paidAt: new Date((checkout.created || Math.floor(Date.now() / 1000)) * 1000).toISOString()
+              };
+              await saveArray(getOrdersStore(), 'orders', orders);
+
+              const products = await readArray(getProductsStore(), 'inventory', seedProducts);
+              const productIndex = products.findIndex((item) => item.id === productId);
+              if (productIndex >= 0) {
+                products[productIndex] = { ...products[productIndex], status: 'Verkauft' };
+                await saveArray(getProductsStore(), 'inventory', products);
+              }
+            }
+          }
+        }
+      }
+
+      return json(200, { received: true });
+    }
+
+    if (route === '/checkout' && method === 'POST') {
+      const stripe = getStripe();
+      if (!stripe) return json(503, { message: 'Onlinezahlung ist noch nicht aktiviert. STRIPE_SECRET_KEY fehlt in den Netlify-Environment-Variablen.' });
+
+      const orderId = String(body.orderId || '').trim();
+      if (!orderId) return json(400, { message: 'Bestellnummer fehlt.' });
+
+      const orders = await readArray(getOrdersStore(), 'orders', []);
+      const order = orders.find((item) => item.id === orderId);
+      if (!order || order.orderType !== 'Personalisierte Produktbestellung') return json(404, { message: 'Bestellung wurde nicht gefunden.' });
+      if (order.paymentStatus === 'Bezahlt') return json(409, { message: 'Diese Bestellung wurde bereits bezahlt.' });
+      if (order.checkoutExpiresAt && Date.now() > Date.parse(order.checkoutExpiresAt)) {
+        await releaseExpiredReservations();
+        return json(410, { message: 'Der Checkout ist abgelaufen. Bitte starte die Bestellung erneut.' });
+      }
+
+      const products = await readArray(getProductsStore(), 'inventory', seedProducts);
+      const product = products.find((item) => item.id === order.productId);
+      if (!product || product.status !== 'Reserviert') return json(409, { message: 'Das reservierte Produkt ist nicht mehr verfügbar.' });
+      const unitAmount = Math.round(Number(product.price) * 100);
+      if (!Number.isSafeInteger(unitAmount) || unitAmount <= 0) return json(400, { message: 'Der Produktpreis ist ungültig.' });
+
+      if (order.stripeCheckoutSessionId) {
+        try {
+          const previousSession = await stripe.checkout.sessions.retrieve(order.stripeCheckoutSessionId);
+          if (previousSession.status === 'open' && previousSession.url) return json(200, { url: previousSession.url });
+        } catch (error) {
+          console.warn('Could not reuse previous Stripe Checkout session:', error.message);
+        }
+      }
+
+      const forwardedProto = event.headers?.['x-forwarded-proto'] || 'https';
+      const host = event.headers?.['x-forwarded-host'] || event.headers?.host;
+      if (!host) return json(500, { message: 'Die Shop-Domain konnte nicht ermittelt werden.' });
+      const siteOrigin = `${forwardedProto}://${host}`;
+      const checkoutExpiresAt = new Date(Date.now() + 31 * 60 * 1000).toISOString();
+      const checkout = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        submit_type: 'pay',
+        customer_email: order.email,
+        billing_address_collection: 'auto',
+        shipping_address_collection: { allowed_countries: ['CH'] },
+        line_items: [{
+          quantity: 1,
+          price_data: {
+            currency: 'chf',
+            unit_amount: unitAmount,
+            product_data: {
+              name: product.title,
+              description: `Golden Goose ${product.model} · Grösse ${product.size} · Aufdruck: ${order.customText}`
+            }
+          }
+        }],
+        metadata: { moomOrderId: order.id, productId: product.id },
+        payment_intent_data: { metadata: { moomOrderId: order.id, productId: product.id } },
+        expires_at: Math.floor(Date.parse(checkoutExpiresAt) / 1000),
+        success_url: `${siteOrigin}/checkout-erfolg.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteOrigin}/product.html?id=${encodeURIComponent(product.id)}&checkout=cancelled`
+      });
+
+      const orderIndex = orders.findIndex((item) => item.id === orderId);
+      orders[orderIndex] = { ...orders[orderIndex], stripeCheckoutSessionId: checkout.id, checkoutExpiresAt };
+      await saveArray(getOrdersStore(), 'orders', orders);
+      return json(200, { url: checkout.url });
+    }
+
+    if (route === '/checkout/verify' && method === 'GET') {
+      const stripe = getStripe();
+      if (!stripe) return json(503, { message: 'Zahlungsstatus ist momentan nicht verfügbar.' });
+      const sessionId = new URL(event.rawUrl).searchParams.get('session_id');
+      if (!sessionId || !sessionId.startsWith('cs_')) return json(400, { message: 'Checkout-Referenz fehlt oder ist ungültig.' });
+      const checkout = await stripe.checkout.sessions.retrieve(sessionId);
+      if (checkout.payment_status !== 'paid') return json(200, { paid: false });
+      const orders = await readArray(getOrdersStore(), 'orders', []);
+      const order = orders.find((item) => item.id === checkout.metadata?.moomOrderId && item.stripeCheckoutSessionId === checkout.id);
+      if (!order) return json(404, { paid: false, message: 'Bestellung wird noch abgeglichen. Bitte lade diese Seite in Kürze erneut.' });
+      return json(200, { paid: true, productTitle: order.productTitle, customText: order.customText, amountTotal: checkout.amount_total, currency: checkout.currency });
+    }
+
     if (route === '/admin/login' && method === 'POST') {
       if (!process.env.ADMIN_PASSWORD || !process.env.SESSION_SECRET) {
         return json(503, { success: false, message: 'Admin-Zugang ist in Netlify noch nicht konfiguriert.' });
@@ -163,12 +335,14 @@ export const handler = async (event) => {
     }
 
     if (route === '/products' && method === 'GET') {
+      await releaseExpiredReservations();
       const products = await readArray(getProductsStore(), 'inventory', seedProducts);
       return json(200, products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     }
 
     const productMatch = route.match(/^\/products\/([^/]+)$/);
     if (productMatch && method === 'GET') {
+      await releaseExpiredReservations();
       const products = await readArray(getProductsStore(), 'inventory', seedProducts);
       const product = products.find((item) => item.id === decodeURIComponent(productMatch[1]));
       return product ? json(200, product) : json(404, { message: 'Produkt nicht gefunden.' });
@@ -236,6 +410,7 @@ export const handler = async (event) => {
       const productId = String(body.productId || '').trim();
       const customText = String(body.customText || '').trim();
       if (!name || !email || (!productId && (!body.customName || !body.message))) return json(400, { message: 'Bitte alle Pflichtfelder ausfüllen.' });
+      if (productId && !process.env.STRIPE_SECRET_KEY) return json(503, { message: 'Onlinezahlung ist noch nicht aktiviert. Stripe muss zuerst in Netlify eingerichtet werden.' });
       let details = {};
       if (productId) {
         const products = await readArray(getProductsStore(), 'inventory', seedProducts);
@@ -243,7 +418,15 @@ export const handler = async (event) => {
         if (!product) return json(404, { message: 'Das ausgewählte Produkt wurde nicht gefunden.' });
         if (product.status !== 'Verfügbar') return json(409, { message: 'Dieses Produkt ist leider nicht mehr verfügbar.' });
         if (!customText || customText.length > 50) return json(400, { message: 'Bitte gib den gewünschten Aufdruck ein (maximal 50 Zeichen).' });
-        details = { productId, productTitle: product.title, productPrice: Number(product.price), customText, orderType: 'Personalisierte Produktbestellung', paymentStatus: 'Zahlung ausstehend' };
+        details = {
+          productId,
+          productTitle: product.title,
+          productPrice: Number(product.price),
+          customText,
+          orderType: 'Personalisierte Produktbestellung',
+          paymentStatus: 'Zahlung ausstehend',
+          checkoutExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+        };
         const index = products.findIndex((item) => item.id === productId);
         products[index] = { ...products[index], status: 'Reserviert' };
         await saveArray(getProductsStore(), 'inventory', products);
@@ -256,7 +439,13 @@ export const handler = async (event) => {
       const orders = await readArray(getOrdersStore(), 'orders', []);
       orders.unshift(order);
       await saveArray(getOrdersStore(), 'orders', orders);
-      return json(201, { success: true, order, message: productId ? 'Deine Bestellung ist eingegangen. Das Unikat wurde für dich reserviert.' : 'Deine Anfrage wurde gesendet.' });
+      return json(201, {
+        success: true,
+        order,
+        message: productId
+          ? 'Das Unikat ist für 30 Minuten reserviert. Du kannst jetzt sicher bezahlen.'
+          : 'Deine Anfrage wurde gesendet.'
+      });
     }
 
     if (route === '/orders' && method === 'GET') {

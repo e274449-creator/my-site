@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zahlung | M ✦ ✦ M</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .payment-result { min-height: 70vh; display: grid; place-items: center; padding: 3rem 0; }
+      .payment-card { width: min(560px, calc(100% - 2rem)); padding: 2.5rem; background: #fff; border: 1px solid var(--border); border-radius: 22px; box-shadow: var(--shadow); text-align: center; }
+      .payment-card h1 { margin: 0 0 1rem; font-family: 'Cormorant Garamond', serif; font-size: clamp(2.4rem, 6vw, 3.5rem); }
+      .payment-card p { color: var(--dark); }
+      .payment-icon { width: 54px; height: 54px; margin: 0 auto 1rem; display: grid; place-items: center; border-radius: 50%; background: #e9f2e6; color: #315b32; font-size: 1.8rem; }
+      .payment-details { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: 14px; background: var(--white); }
+    </style>
+  </head>
+  <body>
+    <main class="payment-result">
+      <section class="payment-card" aria-live="polite">
+        <div class="payment-icon" id="paymentIcon">…</div>
+        <p class="eyebrow">M ✦ ✦ M · Bestellung</p>
+        <h1 id="paymentTitle">Zahlung wird geprüft</h1>
+        <p id="paymentMessage">Einen Moment bitte.</p>
+        <div class="payment-details hidden" id="paymentDetails"></div>
+        <a class="button primary" href="/#shop">Zurück zum Shop</a>
+      </section>
+    </main>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+      const title = document.getElementById('paymentTitle');
+      const message = document.getElementById('paymentMessage');
+      const icon = document.getElementById('paymentIcon');
+      const details = document.getElementById('paymentDetails');
+
+      async function verifyPayment() {
+        if (!sessionId) {
+          title.textContent = 'Keine Zahlung gefunden';
+          message.textContent = 'Die Zahlungsreferenz fehlt. Prüfe deine E-Mail auf eine Bestätigung von Stripe.';
+          return;
+        }
+        try {
+          const response = await fetch(`/api/checkout/verify?session_id=${encodeURIComponent(sessionId)}`, { cache: 'no-store' });
+          const result = await response.json();
+          if (!response.ok || !result.paid) {
+            title.textContent = 'Zahlung wird noch bestätigt';
+            message.textContent = result.message || 'Die Zahlung ist noch nicht bestätigt. Bitte prüfe deine E-Mail und lade diese Seite in Kürze erneut.';
+            return;
+          }
+          icon.textContent = '✓';
+          title.textContent = 'Vielen Dank für deine Bestellung!';
+          message.textContent = 'Deine Zahlung wurde bestätigt. Wir melden uns mit den nächsten Schritten bei dir.';
+          details.classList.remove('hidden');
+          const product = document.createElement('strong');
+          product.textContent = result.productTitle;
+          const personalization = document.createElement('p');
+          personalization.textContent = `Gewünschter Aufdruck: ${result.customText}`;
+          const amount = document.createElement('p');
+          amount.textContent = `Bezahlt: ${(result.amountTotal / 100).toFixed(2)} ${String(result.currency).toUpperCase()}`;
+          const receipt = document.createElement('p');
+          receipt.textContent = 'Eine Quittung wird an deine E-Mail-Adresse gesendet.';
+          details.replaceChildren(product, personalization, amount, receipt);
+        } catch {
+          title.textContent = 'Zahlungsstatus nicht verfügbar';
+          message.textContent = 'Wir konnten den Status gerade nicht abrufen. Stripe sendet dir nach erfolgreicher Zahlung eine Bestätigung per E-Mail.';
+        }
+      }
+      verifyPayment();
+    </script>
+  </body>
+</html>

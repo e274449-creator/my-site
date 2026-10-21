@@ -289,7 +289,7 @@
                   <td>${order.name}</td>
                   <td>${order.email}</td>
                   <td>${order.productTitle || 'Individuelle Anfrage'}${order.productPrice ? `<br>CHF ${Number(order.productPrice).toFixed(2)}` : ''}${order.customText ? `<br><strong>Aufdruck:</strong> ${order.customText}` : ''}</td>
-                  <td>${order.status || 'Anfrage'}${order.message ? `<br>${order.message}` : ''}</td>
+                  <td>${order.status || 'Anfrage'}${order.paymentStatus ? `<br>Zahlung: ${order.paymentStatus}` : ''}${order.paidAt ? `<br>${new Date(order.paidAt).toLocaleString('de-CH')}` : ''}${order.message ? `<br>${order.message}` : ''}</td>
                 </tr>
               `).join('')}
             </tbody>
