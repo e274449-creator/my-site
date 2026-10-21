@@ -23,11 +23,11 @@ Die Netlify-Version nutzt Netlify Functions für Admin, Produkte, Bestellungen u
 5. Deploy ausführen und nach dem Deploy `/api/products` sowie `/admin` testen. Ein erster Produkt-API-Aufruf initialisiert den Blobs-Store.
 6. Stripe-Zahlungen einrichten:
    - Stripe-Konto eröffnen/verifizieren und im Stripe-Dashboard zunächst den **Testmodus** verwenden.
-   - In Netlify die Environment Variable `STRIPE_SECRET_KEY` mit dem Test-Secret-Key (`sk_test_…`) setzen. `STRIPE_WEBHOOK_SECRET` erst setzen, nachdem der Webhook-Endpunkt angelegt wurde.
+   - In Netlify die Environment Variable `STRIPE_SECRET_KEY` mit dem vollständigen Secret API Key aus dem Stripe-Testmodus setzen. Den Wert nur direkt in Netlify eintragen. `STRIPE_WEBHOOK_SECRET` erst setzen, nachdem der Webhook-Endpunkt angelegt wurde.
    - Im Stripe-Dashboard einen Webhook-Endpunkt `https://DEINE-DOMAIN/api/stripe/webhook` anlegen. Als Ereignisse mindestens `checkout.session.completed` und `checkout.session.async_payment_succeeded` auswählen.
-   - Das angezeigte Signaturgeheimnis (`whsec_…`) in Netlify als `STRIPE_WEBHOOK_SECRET` setzen.
+   - Das angezeigte Webhook-Signaturgeheimnis in Netlify als `STRIPE_WEBHOOK_SECRET` setzen. Auch diesen Wert nur direkt in Netlify eintragen.
    - Erneut deployen und mit Stripe-Testkarte `4242 4242 4242 4242` samt zukünftigem Ablaufdatum und beliebigem CVC testen. Testmodus löst keine echte Abbuchung aus.
-   - Vor dem Verkauf Testschlüssel durch Live-Schlüssel (`sk_live_…`) ersetzen und auch den **Live-Webhooks**-Signaturschlüssel eintragen. Beide Webhook-Geheimnisse und Schlüssel geheim halten; niemals in GitHub oder im Chat speichern.
+   - Vor dem Verkauf den Testschlüssel durch den vollständigen Secret API Key aus dem Stripe-Live-Modus ersetzen und auch den Signaturschlüssel des **Live-Webhooks** eintragen. Beide Webhook-Geheimnisse und Schlüssel geheim halten; niemals in GitHub oder im Chat speichern.
    - Im Stripe-Dashboard die gewünschten Zahlungsmethoden aktivieren. Das ist Stripe Checkout; **Shop Pay** ist eine Shopify-Zahlungsart und wird dadurch nicht aktiviert.
    - Der Checkout erlaubt aktuell Versandadressen in der Schweiz und berechnet CHF. Für andere Lieferländer muss die erlaubte Länderliste angepasst werden.
 7. Danach in Netlify unter **Domain management** `moomshoes.com` hinzufügen. Die dort angezeigten DNS-Einträge bei Swizzonic eintragen. Vorhandene MX-/E-Mail-DNS-Einträge nicht löschen. Auf das Netlify-HTTPS-Zertifikat warten.
