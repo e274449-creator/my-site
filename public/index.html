@@ -168,6 +168,14 @@
         <p class="eyebrow">Warenkorb</p>
         <h3>Dein Warenkorb</h3>
         <div id="cartItems" class="cart-items"></div>
+        <div id="cartTotal" class="cart-total hidden"></div>
+        <form id="cartCheckoutForm" class="cart-checkout-form hidden">
+          <label>Name<input type="text" name="name" autocomplete="name" placeholder="Dein Name" required /></label>
+          <label>E-Mail<input type="email" name="email" autocomplete="email" placeholder="deine@email.ch" required /></label>
+          <button type="submit" class="button primary">Warenkorb bezahlen</button>
+          <p id="cartCheckoutMessage" class="form-message" aria-live="polite"></p>
+          <small>Der Gesamtbetrag wird vor der Zahlung nochmals anhand der aktuellen Produkte geprüft.</small>
+        </form>
       </div>
     </div>
 

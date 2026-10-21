@@ -11,6 +11,9 @@ const adminMenuTrigger = document.querySelector('.admin-menu-trigger');
 const cartModal = document.getElementById('cartModal');
 const bestsellerModal = document.getElementById('bestsellerModal');
 const cartItems = document.getElementById('cartItems');
+const cartTotal = document.getElementById('cartTotal');
+const cartCheckoutForm = document.getElementById('cartCheckoutForm');
+const cartCheckoutMessage = document.getElementById('cartCheckoutMessage');
 const bestsellerList = document.getElementById('bestsellerList');
 const modalCloseButton = document.querySelector('.modal-close');
 const cartCloseButton = document.querySelector('.cart-close');
@@ -64,6 +67,8 @@ function renderCart() {
 
   if (!cart.length) {
     cartItems.innerHTML = '<p class="empty-cart">Dein Warenkorb ist zurzeit leer.</p>';
+    cartTotal?.classList.add('hidden');
+    cartCheckoutForm?.classList.add('hidden');
     return;
   }
 
@@ -86,6 +91,47 @@ function renderCart() {
       saveCart(nextCart);
       renderCart();
     });
+  });
+
+  if (cartTotal) {
+    const total = cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    cartTotal.textContent = `Zwischensumme · CHF ${total.toFixed(2)}`;
+    cartTotal.classList.remove('hidden');
+  }
+  cartCheckoutForm?.classList.remove('hidden');
+}
+
+if (cartCheckoutForm) {
+  cartCheckoutForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const items = getCart();
+    if (!items.length) {
+      renderCart();
+      return;
+    }
+
+    const submitButton = cartCheckoutForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    if (cartCheckoutMessage) cartCheckoutMessage.textContent = 'Warenkorb wird geprüft, Zahlungsseite wird geöffnet …';
+
+    try {
+      const formData = new FormData(cartCheckoutForm);
+      const response = await fetch('/api/checkout/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: String(formData.get('name') || '').trim(),
+          email: String(formData.get('email') || '').trim(),
+          productIds: items.map((item) => item.id)
+        })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.url) throw new Error(result.message || `Checkout fehlgeschlagen (HTTP ${response.status}).`);
+      window.location.assign(result.url);
+    } catch (error) {
+      if (cartCheckoutMessage) cartCheckoutMessage.textContent = error.message || 'Die Zahlungsseite konnte nicht geöffnet werden.';
+      submitButton.disabled = false;
+    }
   });
 }
 

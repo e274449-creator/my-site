@@ -54,15 +54,18 @@
           title.textContent = 'Vielen Dank für deine Bestellung!';
           message.textContent = 'Deine Zahlung wurde bestätigt. Wir melden uns mit den nächsten Schritten bei dir.';
           details.classList.remove('hidden');
-          const product = document.createElement('strong');
-          product.textContent = result.productTitle;
-          const personalization = document.createElement('p');
-          personalization.textContent = `Gewünschter Aufdruck: ${result.customText}`;
+          const purchasedItems = document.createElement('div');
+          (result.products || [{ title: result.productTitle, customText: result.customText }]).forEach((item) => {
+            const line = document.createElement('p');
+            line.textContent = `${item.title}${item.size ? ` · Grösse ${item.size}` : ''}${item.customText ? ` · Aufdruck: ${item.customText}` : ''}`;
+            purchasedItems.appendChild(line);
+          });
           const amount = document.createElement('p');
           amount.textContent = `Bezahlt: ${(result.amountTotal / 100).toFixed(2)} ${String(result.currency).toUpperCase()}`;
           const receipt = document.createElement('p');
           receipt.textContent = 'Eine Quittung wird an deine E-Mail-Adresse gesendet.';
-          details.replaceChildren(product, personalization, amount, receipt);
+          details.replaceChildren(purchasedItems, amount, receipt);
+          localStorage.removeItem('moom-cart');
         } catch {
           title.textContent = 'Zahlungsstatus nicht verfügbar';
           message.textContent = 'Wir konnten den Status gerade nicht abrufen. Stripe sendet dir nach erfolgreicher Zahlung eine Bestätigung per E-Mail.';

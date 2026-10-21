@@ -288,7 +288,7 @@
                 <tr>
                   <td>${order.name}</td>
                   <td>${order.email}</td>
-                  <td>${order.productTitle || 'Individuelle Anfrage'}${order.productPrice ? `<br>CHF ${Number(order.productPrice).toFixed(2)}` : ''}${order.customText ? `<br><strong>Aufdruck:</strong> ${order.customText}` : ''}</td>
+                  <td>${order.products ? `${order.products.map((item) => `${item.title} · Grösse ${item.size || '–'}`).join('<br>')}<br><strong>Total: CHF ${Number(order.productPrice || order.products.reduce((sum, item) => sum + Number(item.price || 0), 0)).toFixed(2)}</strong>` : `${order.productTitle || 'Individuelle Anfrage'}${order.productPrice ? `<br>CHF ${Number(order.productPrice).toFixed(2)}` : ''}${order.customText ? `<br><strong>Aufdruck:</strong> ${order.customText}` : ''}`}</td>
                   <td>${order.status || 'Anfrage'}${order.paymentStatus ? `<br>Zahlung: ${order.paymentStatus}` : ''}${order.paidAt ? `<br>${new Date(order.paidAt).toLocaleString('de-CH')}` : ''}${order.message ? `<br>${order.message}` : ''}</td>
                 </tr>
               `).join('')}

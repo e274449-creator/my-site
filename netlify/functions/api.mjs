@@ -106,7 +106,7 @@ async function releaseExpiredReservations() {
   ]);
   const now = Date.now();
   const expiredOrders = orders.filter((order) =>
-    order.orderType === 'Personalisierte Produktbestellung' &&
+    ['Personalisierte Produktbestellung', 'Warenkorb-Bestellung'].includes(order.orderType) &&
     order.paymentStatus !== 'Bezahlt' &&
     order.checkoutExpiresAt &&
     Date.parse(order.checkoutExpiresAt) <= now
@@ -114,10 +114,11 @@ async function releaseExpiredReservations() {
   if (!expiredOrders.length) return;
 
   const expiredIds = new Set(expiredOrders.map((order) => order.id));
-  const expiredProductIds = new Set(expiredOrders.map((order) => order.productId));
+  const expiredProductIds = new Set(expiredOrders.flatMap((order) => order.productIds || [order.productId]).filter(Boolean));
   const activeProductIds = new Set(orders
     .filter((order) => !expiredIds.has(order.id) && order.paymentStatus !== 'Bezahlt' && order.checkoutExpiresAt && Date.parse(order.checkoutExpiresAt) > now)
-    .map((order) => order.productId));
+    .flatMap((order) => order.productIds || [order.productId])
+    .filter(Boolean));
 
   for (let index = 0; index < orders.length; index += 1) {
     if (expiredIds.has(orders[index].id)) {
@@ -208,32 +209,147 @@ async function handleApiEvent(event) {
         const checkout = stripeEvent.data.object;
         if (checkout.payment_status === 'paid') {
           const orderId = checkout.metadata?.moomOrderId;
-          const productId = checkout.metadata?.productId;
-          if (orderId && productId) {
+          const productIds = checkout.metadata?.productIds
+            ? JSON.parse(checkout.metadata.productIds)
+            : checkout.metadata?.productId ? [checkout.metadata.productId] : [];
+          if (orderId && productIds.length) {
             const orders = await readArray(getOrdersStore(), 'orders', []);
             const orderIndex = orders.findIndex((item) => item.id === orderId);
-            if (orderIndex >= 0 && orders[orderIndex].paymentStatus !== 'Bezahlt') {
-              orders[orderIndex] = {
-                ...orders[orderIndex],
-                status: 'Bezahlt',
-                paymentStatus: 'Bezahlt',
-                stripeCheckoutSessionId: checkout.id,
-                paidAt: new Date((checkout.created || Math.floor(Date.now() / 1000)) * 1000).toISOString()
-              };
+            if (orderIndex >= 0) {
+              if (orders[orderIndex].paymentStatus !== 'Bezahlt') {
+                orders[orderIndex] = {
+                  ...orders[orderIndex],
+                  status: 'Bezahlt',
+                  paymentStatus: 'Bezahlt',
+                  stripeCheckoutSessionId: checkout.id,
+                  paidAt: new Date((checkout.created || Math.floor(Date.now() / 1000)) * 1000).toISOString()
+                };
+              }
               await saveArray(getOrdersStore(), 'orders', orders);
 
               const products = await readArray(getProductsStore(), 'inventory', seedProducts);
-              const productIndex = products.findIndex((item) => item.id === productId);
-              if (productIndex >= 0) {
-                products[productIndex] = { ...products[productIndex], status: 'Verkauft' };
-                await saveArray(getProductsStore(), 'inventory', products);
+              const soldIds = new Set(productIds);
+              let productsChanged = false;
+              for (let productIndex = 0; productIndex < products.length; productIndex += 1) {
+                if (soldIds.has(products[productIndex].id) && products[productIndex].status !== 'Verkauft') {
+                  products[productIndex] = { ...products[productIndex], status: 'Verkauft' };
+                  productsChanged = true;
+                }
               }
+              if (productsChanged) await saveArray(getProductsStore(), 'inventory', products);
             }
           }
         }
       }
 
       return json(200, { received: true });
+    }
+
+    if (route === '/checkout/cart' && method === 'POST') {
+      const stripe = getStripe();
+      if (!stripe) return json(503, { message: 'Onlinezahlung ist noch nicht aktiviert. Stripe muss zuerst in Netlify eingerichtet werden.' });
+
+      const name = String(body.name || '').trim();
+      const email = String(body.email || '').trim();
+      const requestedIds = Array.isArray(body.productIds) ? body.productIds.map((id) => String(id).trim()) : [];
+      const productIds = [...new Set(requestedIds)];
+      if (!name || !email) return json(400, { message: 'Bitte Name und E-Mail ausfüllen.' });
+      if (!productIds.length || productIds.length > 10) return json(400, { message: 'Der Warenkorb muss 1 bis 10 unterschiedliche Produkte enthalten.' });
+
+      await releaseExpiredReservations();
+      const products = await readArray(getProductsStore(), 'inventory', seedProducts);
+      const selectedProducts = productIds.map((id) => products.find((product) => product.id === id));
+      if (selectedProducts.some((product) => !product)) return json(404, { message: 'Ein Produkt im Warenkorb wurde nicht gefunden. Bitte lade den Shop neu.' });
+      if (selectedProducts.some((product) => product.status !== 'Verfügbar')) {
+        return json(409, { message: 'Mindestens ein Produkt im Warenkorb ist nicht mehr verfügbar. Bitte aktualisiere deinen Warenkorb.' });
+      }
+
+      const lineItems = selectedProducts.map((product) => {
+        const unitAmount = Math.round(Number(product.price) * 100);
+        if (!Number.isSafeInteger(unitAmount) || unitAmount <= 0) throw new Error(`Ungültiger Preis für Produkt ${product.id}`);
+        return {
+          quantity: 1,
+          price_data: {
+            currency: 'chf',
+            unit_amount: unitAmount,
+            product_data: {
+              name: product.title,
+              description: `Golden Goose ${product.model} · Grösse ${product.size}`
+            }
+          }
+        };
+      });
+
+      const orderId = `order-${Date.now()}-${randomBytes(3).toString('hex')}`;
+      const checkoutExpiresAt = new Date(Date.now() + 31 * 60 * 1000).toISOString();
+      const order = {
+        id: orderId,
+        name,
+        email,
+        orderType: 'Warenkorb-Bestellung',
+        productIds,
+        products: selectedProducts.map((product) => ({ id: product.id, title: product.title, price: Number(product.price), size: product.size })),
+        productTitle: selectedProducts.map((product) => product.title).join(', '),
+        productPrice: selectedProducts.reduce((sum, product) => sum + Number(product.price), 0),
+        paymentStatus: 'Zahlung ausstehend',
+        status: 'Zahlung ausstehend',
+        checkoutExpiresAt,
+        createdAt: new Date().toISOString()
+      };
+      const orders = await readArray(getOrdersStore(), 'orders', []);
+      orders.unshift(order);
+      for (let index = 0; index < products.length; index += 1) {
+        if (productIds.includes(products[index].id)) products[index] = { ...products[index], status: 'Reserviert' };
+      }
+      await Promise.all([
+        saveArray(getOrdersStore(), 'orders', orders),
+        saveArray(getProductsStore(), 'inventory', products)
+      ]);
+
+      try {
+        const forwardedProto = event.headers?.['x-forwarded-proto'] || 'https';
+        const host = event.headers?.['x-forwarded-host'] || event.headers?.host;
+        if (!host) throw new Error('Shop-Domain konnte nicht ermittelt werden.');
+        const siteOrigin = `${forwardedProto}://${host}`;
+        const checkout = await stripe.checkout.sessions.create({
+          mode: 'payment',
+          submit_type: 'pay',
+          customer_email: email,
+          billing_address_collection: 'auto',
+          shipping_address_collection: { allowed_countries: ['CH'] },
+          line_items: lineItems,
+          metadata: { moomOrderId: order.id, productIds: JSON.stringify(productIds) },
+          payment_intent_data: { metadata: { moomOrderId: order.id, productIds: JSON.stringify(productIds) } },
+          expires_at: Math.floor(Date.parse(checkoutExpiresAt) / 1000),
+          success_url: `${siteOrigin}/checkout-erfolg.html?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${siteOrigin}/?checkout=cancelled`
+        });
+
+        order.stripeCheckoutSessionId = checkout.id;
+        const currentOrders = await readArray(getOrdersStore(), 'orders', []);
+        const orderIndex = currentOrders.findIndex((item) => item.id === order.id);
+        if (orderIndex >= 0) {
+          currentOrders[orderIndex] = { ...currentOrders[orderIndex], stripeCheckoutSessionId: checkout.id };
+          await saveArray(getOrdersStore(), 'orders', currentOrders);
+        }
+        return json(200, { url: checkout.url });
+      } catch (error) {
+        const currentProducts = await readArray(getProductsStore(), 'inventory', seedProducts);
+        for (let index = 0; index < currentProducts.length; index += 1) {
+          if (productIds.includes(currentProducts[index].id) && currentProducts[index].status === 'Reserviert') {
+            currentProducts[index] = { ...currentProducts[index], status: 'Verfügbar' };
+          }
+        }
+        const currentOrders = await readArray(getOrdersStore(), 'orders', []);
+        const orderIndex = currentOrders.findIndex((item) => item.id === order.id);
+        if (orderIndex >= 0) currentOrders[orderIndex] = { ...currentOrders[orderIndex], status: 'Checkout-Fehler', paymentStatus: 'Checkout-Fehler' };
+        await Promise.all([
+          saveArray(getProductsStore(), 'inventory', currentProducts),
+          saveArray(getOrdersStore(), 'orders', currentOrders)
+        ]);
+        console.error('Stripe cart checkout creation failed:', error);
+        return json(502, { message: 'Die sichere Zahlungsseite konnte nicht erstellt werden. Bitte versuche es erneut.' });
+      }
     }
 
     if (route === '/checkout' && method === 'POST') {
@@ -312,7 +428,14 @@ async function handleApiEvent(event) {
       const orders = await readArray(getOrdersStore(), 'orders', []);
       const order = orders.find((item) => item.id === checkout.metadata?.moomOrderId && item.stripeCheckoutSessionId === checkout.id);
       if (!order) return json(404, { paid: false, message: 'Bestellung wird noch abgeglichen. Bitte lade diese Seite in Kürze erneut.' });
-      return json(200, { paid: true, productTitle: order.productTitle, customText: order.customText, amountTotal: checkout.amount_total, currency: checkout.currency });
+      return json(200, {
+        paid: true,
+        productTitle: order.productTitle,
+        customText: order.customText,
+        products: order.products || [{ title: order.productTitle, price: order.productPrice, customText: order.customText }],
+        amountTotal: checkout.amount_total,
+        currency: checkout.currency
+      });
     }
 
     if (route === '/admin/login' && method === 'POST') {
