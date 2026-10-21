@@ -347,8 +347,20 @@ async function handleApiEvent(event) {
           saveArray(getProductsStore(), 'inventory', currentProducts),
           saveArray(getOrdersStore(), 'orders', currentOrders)
         ]);
-        console.error('Stripe cart checkout creation failed:', error);
-        return json(502, { message: 'Die sichere Zahlungsseite konnte nicht erstellt werden. Bitte versuche es erneut.' });
+        console.error('Stripe cart checkout creation failed:', {
+          type: error.type || error.name || 'StripeError',
+          code: error.code || 'unknown',
+          statusCode: error.statusCode || 0,
+          requestId: error.requestId || null
+        });
+
+        if (error.type === 'StripeAuthenticationError' || error.code === 'invalid_api_key') {
+          return json(502, { message: 'Stripe hat den API-Schlüssel abgelehnt. Prüfe in Netlify STRIPE_SECRET_KEY und stelle sicher, dass Schlüssel und Stripe-Testmodus zusammenpassen.', errorCode: 'STRIPE_AUTHENTICATION_FAILED' });
+        }
+        if (error.type === 'StripeInvalidRequestError') {
+          return json(502, { message: 'Stripe hat die Checkout-Daten abgelehnt. Prüfe den Stripe-Modus und die Checkout-/Zahlungsmethoden-Einstellungen.', errorCode: error.code || 'STRIPE_INVALID_REQUEST' });
+        }
+        return json(502, { message: 'Stripe konnte die Zahlungsseite nicht erstellen. Prüfe die Stripe-Function-Logs in Netlify.', errorCode: error.code || error.type || 'STRIPE_CHECKOUT_FAILED' });
       }
     }
 
